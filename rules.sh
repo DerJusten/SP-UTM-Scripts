@@ -17,7 +17,7 @@ info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 input="n"
-read -n 1 -p "Soll das Interface $interface ($interfaceIpAddress) bearbeitet werden?" input
+read -n 1 -p "Soll das Interface $interface ($interfaceIpAddress) bearbeitet werden (y/n)?" input
 ##user confirmed
 if [ "$input" = "y" ];then
     ##Create new config
