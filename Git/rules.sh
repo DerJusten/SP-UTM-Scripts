@@ -103,7 +103,7 @@ if [ "$input" = "y" ];then
     let $startRank=$startRank+1
     # Parked Websites
     spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank"
-
+    echo "git test"
     #test#
     ##Datenschutz Anonymisierung aktivieren
     spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
