@@ -104,7 +104,7 @@ if [ "$input" = "y" ];then
     # Parked Websites
     spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank"
 
-
+    #test
     ##Datenschutz Anonymisierung aktivieren
     spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
     spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
