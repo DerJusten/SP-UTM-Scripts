@@ -62,6 +62,69 @@ if [ "$input" = "y" ];then
     spcli rule transparent add id "2" type "INCLUDE" src "$intInterface" dst "$internetInterface"
     spcli rule transparent add id "3" type "INCLUDE" src "$intInterface" dst "$internetInterface"
     spcli appmgmt restart application "http_proxy"
+
+    webfilterID=$(spcli webfilter ruleset get | awk 'BEGIN {FS="|" }; {print $1 "\t" $2}' | grep security |cut -f1 -d$'\t')
+    startRank=0
+    # Waffen
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.5.3" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Porno & Erotik
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.2" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Erotik möglich
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.4" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Thread
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.2" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Abstoßend
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.6.0" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Proxy
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.8" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    #Hacking
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.1" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Spiele
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.11.0" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Spam Domains
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.5" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Social Media
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.31.2" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Tracking Strict
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.08.3" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Unseriöses Geld verdienen
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.15.35" action "blacklist-cat" rank "$startRank"
+    let $startRank=$startRank+1
+    # Parked Websites
+    spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank"
+
+
+    ##Datenschutz Anonymisierung aktivieren
+    spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
+    spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
+    spcli extc value set application "spibfd" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "syslog" variable "ANONYMIZELOGS_IPSEC" value [ "1" ]
+    spcli extc value set application "syslog" variable "ANONYMIZELOGS_DHCP" value [ "1" ]
+    spcli extc value set application "syslog" variable "ANONYMIZELOGS_ULOG" value [ "1" ]
+    spcli extc value set application "wap" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "sshd" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "squid-reverse" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "spf2bd" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "spcgi" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "smtpd" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "securepoint_firewall" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "openvpn" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "mailfilter" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "l2tpd" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "ipsec" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
+    spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
 else
     echo "Vorgang abgebrochen"
 fi
