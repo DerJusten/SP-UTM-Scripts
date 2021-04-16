@@ -37,7 +37,7 @@ if [ "$input" = "y" ];then
     spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
     ##NTP
     spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
-    ##Create Group
+    ##Create Group Mails
     spcli service group new name "dgrp_mails"
     ## 993
     spcli service group add name "dgrp_mails" services "imap-ssl"
@@ -47,8 +47,20 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_mails" services "smtps"
     ## 587
     spcli service group add name "dgrp_mails" services "submission"
+    ## 143
+    spcli service group add name "dgrp_mails" services "imap"
+    ## 110
+    spcli service group add name "dgrp_mails" services "pop3"
     ## Add Mailgroup
     spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    ##Create Group Teamviewer
+    spcli service group new name "dgrp_teamviewer"
+    ## Add teamviewer ports TCP + UDP
+    spcli service group add name "dgrp_teamviewer" services "teamviewer_tcp"
+    spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
+    ## Add TeamviewerGroup to rules
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+
     
     if [ "$konnektorExists" = "true" ] && [ "$konnektorIpAddress" != "X.X.X.X" ];then
         echo "valid konnektor"
