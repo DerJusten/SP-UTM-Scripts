@@ -11,9 +11,7 @@ location="Neuenhaus"
 organization="maxbenedikt GmbH"
 organization_unit="IT"
 email="info@maxbenedikt.com"
-####### Konnektor ########################
-konnektorExists="false"
-konnektorIpAddress="X.X.X.X"
+
 ##########################################
 interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
@@ -60,12 +58,18 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
     spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
-
+   
+    read -n 1 -s -p "Ist ein Konnektor vorhanden? (y/n):"$'\n' input_konnektor
     
-    if [ "$konnektorExists" = "true" ] && [ "$konnektorIpAddress" != "X.X.X.X" ];then
-        echo "valid konnektor"
+    if [ "$input_konnektor" = "y" ];then
+        read -p "IP-Adresse:"$'\n' konnektorIpAddress
+        ip route get "$konnektorIpAddress" > /dev/null 2>&1
+
+        if [ $? = "1" ];then
+            echo "Konnektor IP ungueltig"
         else
-        echo "Konnektor wird übersprungen"
+            echo "Konnektor IP gueltig."
+        fi
     fi
 
     ################## SSL Proxy ########################
