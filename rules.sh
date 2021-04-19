@@ -17,18 +17,20 @@ interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t"
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
-input="n"
-read -n 1 -p "Soll das Interface $interface ($interfaceIpAddress) bearbeitet werden (y/n)?" input
+
+while [ "$input" != "n" ] && [ "$input" != "y" ];do
+    read -s -n 1 -p "Soll das Interface $interface ($interfaceIpAddress) bearbeitet werden (y/n)?"$'\n' input
+done
 ##user confirmed
 if [ "$input" = "y" ];then
     ##Create new config
     dtnow=$(date +"%m-%d-%Y_%T")
     spcli system config save name "autorules_$dtnow" 
-    ##Disable any rules to internet
-    id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
+    ## Disable any rules from internal network to internet
+    id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     while [ ! -z $id ];do
-       spcli rule set id "$id" flags [ "DROP" "LOG" "HIDENAT" "DISABLED" ]
-       id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT |grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
+       spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
+       id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED |grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     done
     spcli rule group new name "Interne Regeln"
     ##Default Internet
@@ -58,20 +60,43 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
     spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
-   
+
+    while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
+        read -s -n 1 -p "Wird Terra Cloud Backup verwendet?"$'\n' inputTerraCloud
+    done
+    if [ "$inputTerraCloud" = "y" ];then
+        ## TerraCloud
+        spcli service new name "TerraCloud 8086" proto "tcp" ct_helper "" dst-ports [ "8086" ] src-ports [ ]
+        spcli service new name "TerraCloud 8087" proto "tcp" ct_helper "" dst-ports [ "8087" ] src-ports [ ]
+        spcli service new name "TerraCloud 2546" proto "tcp" ct_helper "" dst-ports [ "2546" ] src-ports [ ]
+
+        spcli service group new name "dgrp_terracloud"
+        spcli service group add name "dgrp_terracloud" services "TerraCloud 8086"
+        spcli service group add name "dgrp_terracloud" services "TerraCloud 8087"
+        spcli service group add name "dgrp_terracloud" services "TerraCloud 2546"
+    fi
+    else
+    echo "Vorgang abgebrochen"
+fi
+while [ "$input_konnektor" != "n" ] && [ "$input_konnektor" != "y" ];do
     read -n 1 -s -p "Ist ein Konnektor vorhanden? (y/n):"$'\n' input_konnektor
-    
+done 
+
     if [ "$input_konnektor" = "y" ];then
-        read -p "IP-Adresse:"$'\n' konnektorIpAddress
+        read -p "IP-Adresse:" konnektorIpAddress
         ip route get "$konnektorIpAddress" > /dev/null 2>&1
 
-        if [ $? = "1" ];then
-            echo "Konnektor IP ungueltig"
-        else
-            echo "Konnektor IP gueltig."
-        fi
+        while [ $? != "0" ] || [ ! -z "$konnektorIpAddress" ];do
+            read -p"Konnektor IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n'
+            ip route get "$konnektorIpAddress" > /dev/null 2>&1
+        done
     fi
 
+while [ "$inputProxy" != "n" ] && [ "$input" != "y" ];do
+    read -s -n 1 -p "Soll der HTTP Proxy aktiviert werden? (y/n)"$'\n' inputProxy
+done
+
+if [ "$inputProxy" = "y" ];then
     ################## SSL Proxy ########################
     ## Add ProxyCertificate
     spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email"
@@ -152,6 +177,5 @@ if [ "$input" = "y" ];then
     spcli extc value set application "ipsec" variable "ANONYMIZELOGS" value [ "1" ]
     spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
     spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
-else
-    echo "Vorgang abgebrochen"
 fi
+echo "Vorgang abgeschlossen"
