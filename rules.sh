@@ -20,7 +20,7 @@ interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
-    read -s -n 1 -p "Soll das Interface $interface ($interfaceIpAddress) bearbeitet werden (y/n)?"$'\n' input
+    read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
 ##user confirmed
 if [ "$input" = "y" ];then
@@ -35,7 +35,7 @@ if [ "$input" = "y" ];then
        spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
        id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED |grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     done
-    echo "Erstelle interne Regeln"
+    echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
     spcli rule group new name "Interne Regeln"
     ##Default Internet
     spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
@@ -56,14 +56,14 @@ if [ "$input" = "y" ];then
     ## 110
     spcli service group add name "dgrp_mails" services "pop3"
     ## Add Mailgroup
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
     ##Create Group Teamviewer
     spcli service group new name "dgrp_teamviewer"
     ## Add teamviewer ports TCP + UDP
     spcli service group add name "dgrp_teamviewer" services "teamviewer_tcp"
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
 
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
@@ -79,8 +79,9 @@ if [ "$input" = "y" ];then
         spcli service group add name "dgrp_terracloud" services "TerraCloud 8086"
         spcli service group add name "dgrp_terracloud" services "TerraCloud 8087"
         spcli service group add name "dgrp_terracloud" services "TerraCloud 2546"
+        spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
     fi
-    else
+else
     echo "Vorgang abgebrochen"
 fi
 
