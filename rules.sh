@@ -11,6 +11,7 @@ location="Neuenhaus"
 organization="maxbenedikt GmbH"
 organization_unit="IT"
 email="info@maxbenedikt.com"
+############## Functions ######################
 
 ##########################################
 interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
@@ -25,13 +26,16 @@ done
 if [ "$input" = "y" ];then
     ##Create new config
     dtnow=$(date +"%m-%d-%Y_%T")
+    echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
     spcli system config save name "autorules_$dtnow" 
+    echo "Deaktiviere alle ANY Regeln von '$intInterface' nach '$internetInterface'"
     ## Disable any rules from internal network to internet
     id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     while [ ! -z $id ];do
        spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
        id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED |grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     done
+    echo "Erstelle interne Regeln"
     spcli rule group new name "Interne Regeln"
     ##Default Internet
     spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
@@ -61,6 +65,7 @@ if [ "$input" = "y" ];then
     ## Add TeamviewerGroup to rules
     spcli rule new group "Interne Regeln" src "$intInterface" dst "internet" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
 
+    ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
         read -s -n 1 -p "Wird Terra Cloud Backup verwendet?"$'\n' inputTerraCloud
     done
@@ -78,28 +83,53 @@ if [ "$input" = "y" ];then
     else
     echo "Vorgang abgebrochen"
 fi
+
+
+## Konnektor
 while [ "$input_konnektor" != "n" ] && [ "$input_konnektor" != "y" ];do
     read -n 1 -s -p "Ist ein Konnektor vorhanden? (y/n):"$'\n' input_konnektor
 done 
 
-    if [ "$input_konnektor" = "y" ];then
-        read -p "IP-Adresse:" konnektorIpAddress
+if [ "$input_konnektor" = "y" ];then
+    read -p "IP-Adresse:" konnektorIpAddress
+    ip route get "$konnektorIpAddress" > /dev/null 2>&1
+
+    while [ $? != "0" ] || [ -z "$konnektorIpAddress" ];do
+        read -p"Konnektor IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' konnektorIpAddress
         ip route get "$konnektorIpAddress" > /dev/null 2>&1
+    done
+    spcli node new name "TI-Konnektor" address "$konnektorIpAddress/32" zone "$intZone" > /dev/null 2>&1
+    spcli rule group new name "Konnektor"
+    spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+fi
 
-        while [ $? != "0" ] || [ ! -z "$konnektorIpAddress" ];do
-            read -p"Konnektor IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n'
-            ip route get "$konnektorIpAddress" > /dev/null 2>&1
-        done
-    fi
 
+## TK Anlage
+while [ "$input_TK" != "n" ] && [ "$input_TK" != "y" ];do
+    read -n 1 -s -p "Ist eine TK Anlage vorhanden? (y/n):"$'\n' input_TK
+done 
+
+if [ "$input_TK" = "y" ];then
+    read -p "IP-Adresse:" tkIpAddress
+    ip route get "$tkIpAddress" > /dev/null 2>&1
+
+    while [ $? != "0" ] || [ -z "$tkIpAddress" ];do
+        read -p"TK-Anlagen IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' tkIpAddress
+        ip route get "$tkIpAddress" > /dev/null 2>&1
+    done
+    spcli node new name "TK-Anlage" address "$tkIpAddress/32" zone "$intZone" > /dev/null 2>&1
+    spcli rule group new name "TK-Anlage Regeln"
+    spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+fi
+
+################## SSL Proxy ########################
 while [ "$inputProxy" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Soll der HTTP Proxy aktiviert werden? (y/n)"$'\n' inputProxy
 done
 
 if [ "$inputProxy" = "y" ];then
-    ################## SSL Proxy ########################
     ## Add ProxyCertificate
-    spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email"
+    spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null 2>&1
     CA_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "CA_Proxy" | cut -f1 -d$'\t')
     
     ## Enable SSL Proxy
