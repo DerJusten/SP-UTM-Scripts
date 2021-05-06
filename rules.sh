@@ -19,6 +19,7 @@ info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 
+echo "Skript zur Ersteinrichtung Version 0.1 by DerJusten"
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
