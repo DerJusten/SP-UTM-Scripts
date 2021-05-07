@@ -14,12 +14,17 @@ email="info@maxbenedikt.com"
 ############## Functions ######################
 
 ##########################################
-interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
+interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 
-echo "Skript zur Ersteinrichtung Version 0.1 by DerJusten"
+if [ -z $interfaceID ]; then
+    echo "Es konnte die interne IP-Adresse nicht ermittelt werden. Bitte überprüfen Sie ob die Zonennamen von der Firewall mit dem Skript übereinstimmen."
+    exit 1
+fi
+
+echo "Skript zur Ersteinrichtung fuer UTM Version 12 | Version 0.1 by DerJusten"
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
@@ -30,18 +35,20 @@ if [ "$input" = "y" ];then
     echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
     spcli system config save name "autorules_$dtnow" 
     echo "Deaktiviere alle ANY Regeln von '$intInterface' nach '$internetInterface'"
+
     ## Disable any rules from internal network to internet
-    id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
+    id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intInterface | grep $internetInterface |cut -f1 -d$'\t') 
     while [ ! -z $id ];do
        spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
        id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED |grep $intInterface | grep $internetInterface |cut -f1 -d$'\t')
     done
     echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
+    
     spcli rule group new name "Interne Regeln"
     ##Default Internet
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     ##NTP
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     ##Create Group Mails
     spcli service group new name "dgrp_mails"
     ## 993
@@ -57,18 +64,19 @@ if [ "$input" = "y" ];then
     ## 110
     spcli service group add name "dgrp_mails" services "pop3"
     ## Add Mailgroup
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
+
     ##Create Group Teamviewer
     spcli service group new name "dgrp_teamviewer"
     ## Add teamviewer ports TCP + UDP
     spcli service group add name "dgrp_teamviewer" services "teamviewer_tcp"
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
-    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+    spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
 
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
-        read -s -n 1 -p "Wird Terra Cloud Backup verwendet?"$'\n' inputTerraCloud
+        read -s -n 1 -p "Wird Terra Cloud Backup verwendet? (y/n)"$'\n' inputTerraCloud
     done
     if [ "$inputTerraCloud" = "y" ];then
         ## TerraCloud
@@ -80,10 +88,8 @@ if [ "$input" = "y" ];then
         spcli service group add name "dgrp_terracloud" services "TerraCloud 8086"
         spcli service group add name "dgrp_terracloud" services "TerraCloud 8087"
         spcli service group add name "dgrp_terracloud" services "TerraCloud 2546"
-        spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface"
+        spcli rule new group "Interne Regeln" src "$intInterface" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     fi
-
-
 
     ## Konnektor
     while [ "$input_konnektor" != "n" ] && [ "$input_konnektor" != "y" ];do
@@ -103,7 +109,6 @@ if [ "$input" = "y" ];then
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
-
     ## TK Anlage
     while [ "$input_TK" != "n" ] && [ "$input_TK" != "y" ];do
         read -n 1 -s -p "Ist eine TK Anlage vorhanden? (y/n):"$'\n' input_TK
@@ -122,8 +127,33 @@ if [ "$input" = "y" ];then
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
+    while [ "$inputVPN" != "n" ] && [ "$inputVPN" != "y" ];do
+        read -s -n 1 -p "Soll VPN eingerichtet werden? Es darf keine VPN bereits existieren! (y/n)"$'\n' inputVPN
+    done
+
+    if [ "$inputVPN" = "y" ];then
+        CA_VPN="CA_RW_VPN"
+        CS_VPN="CS_RW_VPN"
+        ## Add VPN Certificate
+        spcli cert new bits $bits common_name "$CA_VPN" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        CA_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CA_VPN" | cut -f1 -d$'\t')
+        spcli cert new bits $bits common_name "$CS_VPN" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        CS_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CS_VPN" | cut -f1 -d$'\t')
+        spcli cert extension add id "$CS_VPN_ID" ext_name "Netscape Cert Type" ext_value "SSL Server"
+        spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication"
+        
+        VPN_Name="RW-VPN-U1194"
+        VPN_network_obj="vpn-c2s-network" 
+        spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ]
+        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "10.8.0.0/24" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
+        spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0"
+        spcli node new name "$VPN_network_obj" address "10.8.0.0/24" zone "vpn-ssl-$VPN_Name"
+        spcli rule group new name "VPN Regeln"
+        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+    fi
+
     ################## SSL Proxy ########################
-    while [ "$inputProxy" != "n" ] && [ "$input" != "y" ];do
+    while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
         read -s -n 1 -p "Soll der HTTP Proxy aktiviert werden? (y/n)"$'\n' inputProxy
     done
 
@@ -140,7 +170,13 @@ if [ "$input" = "y" ];then
         spcli extc value set application "http_proxy" variable "SSLPROXY_EXCEPTION_LIST_ENABLED" value "0"
         spcli extc value set application "http_proxy" variable "SSLPROXY_VERIFY_PEER" value "0"
         spcli extc value set application "http_proxy" variable "ENABLE_TRANSPARENT" value "1"
-        spcli rule transparent add id "2" type "INCLUDE" src "$intInterface" dst "$internetInterface"
+
+        ## Delete existing http rule
+        Node_ID=$(spcli rule transparent get |awk 'BEGIN {FS = "|" }; {print $3 "\t" $2}' |grep -w http | cut -f1 -d$'\t')
+        if [ ! -z $Node_ID ];then
+            spcli rule transparent add id "2" type "INCLUDE" src "$intInterface" dst "$internetInterface"
+        fi
+
         spcli rule transparent add id "3" type "INCLUDE" src "$intInterface" dst "$internetInterface"
         spcli appmgmt restart application "http_proxy"
 
@@ -187,6 +223,21 @@ if [ "$input" = "y" ];then
         spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank"
         ##########################################################################
 
+        read -s -n 1 -p "Soll das CloudBackup aktiviert werden? (y/n)" inputCloudBackup
+        if [ "$inputCloudBackup" = "y" ];then
+            read -p "Geben Sie das Passwort fuer das CloudBackup ein:"$'\n' inputCloudPw
+            if [ ! -z $inputCloudPw ];then
+                spcli system cloudbackup set password "$inputCloudPw"
+                spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
+            else
+                echo "Passwort darf nicht leer sein. Cloud Backup wurde nicht eingerichtet"
+            fi
+        fi
+
+        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
+        if [ ! -z $ServerAdminURL ];then
+            spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
+        fi
         ##Datenschutz Anonymisierung aktivieren
         spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
         spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
@@ -209,6 +260,16 @@ if [ "$input" = "y" ];then
         spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
     fi
     echo "Vorgang abgeschlossen"
+
+    spcli appmgmt restart application "named"
+    spcli appmgmt restart application "openvpn"
+
+    echo "###### Zusammenfassung #######"
+    echo ""
+    echo "Konnektor IP:"$'\t'$konnektorIpAddress
+    echo "TK-Anlagen IP:"$'\t'$tkIpAddress
+    echo "Cloud Backup PW:"$'\t'$inputCloudPw
+    echo "Server URL:"$'\t'$ServerAdminURL 
 else
     echo "Vorgang abgebrochen"
 fi
