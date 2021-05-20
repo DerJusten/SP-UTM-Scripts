@@ -14,6 +14,16 @@ email="info@maxbenedikt.com"
 ############## Functions ######################
 
 ##########################################
+echo "Skript zur Ersteinrichtung fuer UTM Version 11 & 12 | Version 0.1 by DerJusten"
+version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
+if case $version in "11"*) true;; *) false;; esac; then
+    echo "Version 11 wurde ermittelt"
+    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
+else
+    echo "Version 12 wurde ermittelt"
+    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
+fi
+
 interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
@@ -24,7 +34,6 @@ if [ -z $interfaceID ]; then
     exit 1
 fi
 
-echo "Skript zur Ersteinrichtung fuer UTM Version 12 | Version 0.1 by DerJusten"
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
