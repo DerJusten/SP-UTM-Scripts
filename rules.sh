@@ -11,7 +11,7 @@ VPN_network_obj="vpn-c2s-network"
 CA_VPN="CA_RW_VPN"
 CS_VPN="CS_RW_VPN"
 VPN_Tun="10.8.0.0/24"
-####### Zertifikatseinstellungen für Proxy #########
+####### Zertifikatseinstellungen für Proxy & VPN #########
 bits="2048"
 state="Deutschland"
 location="Neuenhaus"
@@ -123,7 +123,9 @@ if [ "$input" = "y" ];then
         done
         spcli node new name "TI-Konnektor" address "$konnektorIpAddress/32" zone "$intZone" > /dev/null 2>&1
         spcli rule group new name "Konnektor"
+        spcli service new name "Konnektor TCP 8443" proto "tcp" ct_helper "" dst-ports [ "8443" ] src-ports [ ]
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+        spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
     ## TK Anlage
