@@ -80,6 +80,8 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_mails" services "imap"
     ## 110
     spcli service group add name "dgrp_mails" services "pop3"
+    ## 995
+    spcli service group add name "dgrp_mails" services "pop3s"
     ## Add Mailgroup
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
 
