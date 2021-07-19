@@ -84,7 +84,10 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_mails" services "pop3s"
     ## Add Mailgroup
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
-
+    ## Add DNS Server
+    spcli extc global set variable "GLOB_NAMESERVER" value [ "9.9.9.9" "149.112.112.112" ]
+    ## Add DNS Rule
+    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ]
     ##Create Group Teamviewer
     spcli service group new name "dgrp_teamviewer"
     ## Add teamviewer ports TCP + UDP
