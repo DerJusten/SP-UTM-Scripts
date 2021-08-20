@@ -69,7 +69,7 @@ if [ "$input" = "y" ];then
     ##Create Group Mails
     spcli service group new name "dgrp_mails"
     ## 993
-    spcli service group add name "dgrp_mails" services "imap-ssl"
+    spcli service group add name "dgrp_mails" services "imap-ssl" 
     ## 25
     spcli service group add name "dgrp_mails" services "smtp"
     ## 465
@@ -84,10 +84,8 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_mails" services "pop3s"
     ## Add Mailgroup
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
-    ## Add DNS Server
-    spcli extc global set variable "GLOB_NAMESERVER" value [ "9.9.9.9" "149.112.112.112" ]
-    ## Add DNS Rule
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ]
+
+ 
     ##Create Group Teamviewer
     spcli service group new name "dgrp_teamviewer"
     ## Add teamviewer ports TCP + UDP
@@ -95,23 +93,45 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    
+    ## Create TerraCloud Backup ports
+    spcli service new name "TerraCloud 8086" proto "tcp" ct_helper "" dst-ports [ "8086" ] src-ports [ ]
+    spcli service new name "TerraCloud 8087" proto "tcp" ct_helper "" dst-ports [ "8087" ] src-ports [ ]
+    spcli service new name "TerraCloud 2546" proto "tcp" ct_helper "" dst-ports [ "2546" ] src-ports [ ]
 
+    ## Create TerraCloud Group
+    spcli service group new name "dgrp_terracloud"
+    spcli service group add name "dgrp_terracloud" services "TerraCloud 8086"
+    spcli service group add name "dgrp_terracloud" services "TerraCloud 8087"
+    spcli service group add name "dgrp_terracloud" services "TerraCloud 2546"
+
+    ## Create Whatsapp Group
+    spcli service group new name "dgrp_whatsapp"
+    spcli service group add name "dgrp_whatsapp" services "xmpp"
+    spcli service group add name "dgrp_whatsapp" services "xmpp-ssl"
+
+    ## Add DNS Rule
+    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ]
+    ## Add DNS Server
+    spcli extc global set variable "GLOB_NAMESERVER" value [ "9.9.9.9" "149.112.112.112" ]
+   
+   
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
         read -s -n 1 -p "Wird Terra Cloud Backup verwendet? (y/n)"$'\n' inputTerraCloud
     done
     if [ "$inputTerraCloud" = "y" ];then
-        ## TerraCloud
-        spcli service new name "TerraCloud 8086" proto "tcp" ct_helper "" dst-ports [ "8086" ] src-ports [ ]
-        spcli service new name "TerraCloud 8087" proto "tcp" ct_helper "" dst-ports [ "8087" ] src-ports [ ]
-        spcli service new name "TerraCloud 2546" proto "tcp" ct_helper "" dst-ports [ "2546" ] src-ports [ ]
-
-        spcli service group new name "dgrp_terracloud"
-        spcli service group add name "dgrp_terracloud" services "TerraCloud 8086"
-        spcli service group add name "dgrp_terracloud" services "TerraCloud 8087"
-        spcli service group add name "dgrp_terracloud" services "TerraCloud 2546"
         spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
+
+        ## TerraCloud Abfrage
+    while [ "$inputWhatsapp" != "n" ] && [ "$inputWhatsapp" != "y" ];do
+        read -s -n 1 -p "Soll WhatsApp freigegeben werden? (y/n)"$'\n' inputWhatsapp
+    done
+    if [ "$inputWhatsapp" = "y" ];then
+        spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_whatsapp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    fi
+
 
     ## Konnektor
     while [ "$input_konnektor" != "n" ] && [ "$input_konnektor" != "y" ];do
