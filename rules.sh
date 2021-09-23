@@ -11,18 +11,36 @@ VPN_network_obj="vpn-c2s-network"
 CA_VPN="CA_RW_VPN"
 CS_VPN="CS_RW_VPN"
 VPN_Tun="10.8.0.0/24"
+VPN_SupportUser="support"
+VPN_SupportGrp="grpVPN"
 ####### Zertifikatseinstellungen für Proxy & VPN #########
 bits="2048"
 state="Deutschland"
-location="Neuenhaus"
-organization="maxbenedikt GmbH"
-organization_unit="IT"
-email="info@maxbenedikt.com"
+location=""
+organization=""
+organization_unit=""
+email=""
 ####################################################
 ############## Functions ######################
 ####################################################
 
 echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.1 by DerJusten"
+# Get current directory and read conf.cfg
+dir=$(cd `dirname $0` && pwd)
+cfg=$dir"/conf.cfg"
+
+if test -f "$cfg"; then
+    echo "Load variables"
+    source $dir/conf.cfg
+    location=$cfgLoc
+    organization=$cfgOrg
+    organization_unit=$cfgOrgUnit
+    email=$cfgEmail
+else
+    echo $cfg " not found"
+fi
+
+
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
     echo "Version 11 wurde ermittelt"
@@ -52,6 +70,28 @@ if [ "$input" = "y" ];then
     echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
     spcli system config save name "autorules_$dtnow" 
     echo "Deaktiviere alle ANY Regeln von '$intNetwork' nach '$internetInterface'"
+
+    ## Delete default rules
+    ## Abfrage
+    while [ "$inputDelRules" != "n" ] && [ "$inputDelRules" != "y" ];do
+        read -s -n 1 -p "Sollen die 'Default rules' gelöscht werden? (y/n)"$'\n' inputDelRules
+    done
+    if [ "$inputDelRules" = "y" ];then
+        id_rule1 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal-network ~auto-generated~" |cut -f1 -d$'\t')
+        if [ ! -z $id_rule1 ];then
+            spcli rule group delete id "$id_rule1"
+        fi
+
+        id_rule2 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "dmz1-network ~auto-generated~" |cut -f1 -d$'\t')
+        if [ ! -z $id_rule2 ];then
+            spcli rule group delete id "$id_rule2"
+        fi
+
+        id_rul3 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal" |cut -f1 -d$'\t')
+        if [ ! -z $id_rule3 ];then
+            spcli rule group delete id "$id_rule3"
+        fi
+    fi
 
     ## Disable any rules from internal network to internet
     id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intNetwork | grep $internetInterface |cut -f1 -d$'\t') 
@@ -124,7 +164,7 @@ if [ "$input" = "y" ];then
         spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
-        ## TerraCloud Abfrage
+    ## Whatsapp Abfrage
     while [ "$inputWhatsapp" != "n" ] && [ "$inputWhatsapp" != "y" ];do
         read -s -n 1 -p "Soll WhatsApp freigegeben werden? (y/n)"$'\n' inputWhatsapp
     done
@@ -172,6 +212,7 @@ if [ "$input" = "y" ];then
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
+
     ## VPN
     while [ "$inputVPN" != "n" ] && [ "$inputVPN" != "y" ];do
         read -s -n 1 -p "Soll VPN eingerichtet werden? Es darf keine VPN bereits existieren! (y/n)"$'\n' inputVPN
@@ -185,15 +226,37 @@ if [ "$input" = "y" ];then
         spcli cert new bits $bits common_name "$CS_VPN" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
         CS_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CS_VPN" | cut -f1 -d$'\t')
         spcli cert extension add id "$CS_VPN_ID" ext_name "Netscape Cert Type" ext_value "SSL Server"
-        spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication"
-        
+        spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication" 
+        spcli cert new bits $bits common_name "$CC_RW_Support" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+       
 
+        ## Add VPN rules
         spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ]
         spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
         spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0"
         spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name"
         spcli rule group new name "VPN Regeln"
         spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+
+        ## Create VPN Group
+        spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ]
+        vpn_support_pw=$(openssl rand -base64 24)
+        spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "grpVPN" ] 
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_l2tp_ip" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ip" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ipv6" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "password_length" value "8"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_name" value "$VPN_Name"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_certificate" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_gateway" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "language" value "DEFAULT"
+        spcli user attribute set name "$VPN_SupportUser" attribute "password_change" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_client_download" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_redirectgateway" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_filtered" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_quarantine" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0"   
     fi
 
     ################## SSL Proxy ########################
@@ -218,9 +281,9 @@ if [ "$input" = "y" ];then
         ## Delete existing http rule
         Node_ID=$(spcli rule transparent get |awk 'BEGIN {FS = "|" }; {print $3 "\t" $2}' |grep -w http | cut -f1 -d$'\t')
         if [ ! -z $Node_ID ];then
-            spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
+               spcli rule transparent delete node_id "$Node_ID"
         fi
-
+         spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
         spcli rule transparent add id "3" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
         spcli appmgmt restart application "http_proxy"
 
@@ -314,6 +377,7 @@ if [ "$input" = "y" ];then
     echo "TK-Anlagen IP:"$'\t'$tkIpAddress
     echo "Cloud Backup PW:"$'\t'$inputCloudPw
     echo "Server URL:"$'\t'$ServerAdminURL 
+    echo "VPN Support Pw:"$'\t'$vpn_support_pw
 else
     echo "Vorgang abgebrochen"
 fi
