@@ -23,6 +23,8 @@ organization=""
 organization_unit=""
 email=""
 ####################################################
+dns1= "9.9.9.9" 
+dns2="149.112.112.112"
 ############## Functions ######################
 ####################################################
 
@@ -154,10 +156,12 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_whatsapp" services "xmpp"
     spcli service group add name "dgrp_whatsapp" services "xmpp-ssl"
 
+
+
     ## Add DNS Rule
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
     ## Add DNS Server
-    spcli extc global set variable "GLOB_NAMESERVER" value [ "9.9.9.9" "149.112.112.112" ]
+    spcli extc global set variable "GLOB_NAMESERVER" value [ "$dns1" "$dns2" ]
    
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
