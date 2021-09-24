@@ -22,9 +22,14 @@ location=""
 organization=""
 organization_unit=""
 email=""
-####################################################
-dns1= "9.9.9.9" 
+########## Sonstiges ############
+dns1="9.9.9.9" 
 dns2="149.112.112.112"
+ruleGrpInternet="Intern - Internet"
+ruleGrpInterface="Intern - Firewall"
+ruleGrpSurveillance="Ueberwachung"
+ruleGrpTI="Konnektor"
+ruleGrpTI="TK-Anlage Regeln"
 ############## Functions ######################
 ####################################################
 
@@ -48,15 +53,15 @@ fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
-    echo "Version 11 wurde ermittelt"
+    echo "UTM Version 11 wurde ermittelt"
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
 else
-    echo "Version 12 wurde ermittelt"
+    echo "UTM Version 12 wurde ermittelt"
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
     isVersion12="1"
 fi
+echo ""
 
-##interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
@@ -69,6 +74,7 @@ fi
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
+
 ##user confirmed
 if [ "$input" = "y" ];then
     ##Create new config
@@ -107,11 +113,11 @@ if [ "$input" = "y" ];then
     done
     echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
     
-    spcli rule group new name "Interne Regeln" > /dev/null
+    spcli rule group new name "$ruleGrpInternet" > /dev/null
     ##Default Internet
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     ##NTP
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     ##Create Group Mails
     spcli service group new name "dgrp_mails"
     ## 993
@@ -129,7 +135,7 @@ if [ "$input" = "y" ];then
     ## 995
     spcli service group add name "dgrp_mails" services "pop3s"
     ## Add Mailgroup
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "dgrp_mails" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
 
  
     ##Create Group Teamviewer
@@ -138,7 +144,7 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_teamviewer" services "teamviewer_tcp"
     spcli service group add name "dgrp_teamviewer" services "teamviewer_udp"
     ## Add TeamviewerGroup to rules
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "dgrp_teamviewer" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     
     ## Create TerraCloud Backup ports
     spcli service new name "TerraCloud 8086" proto "tcp" ct_helper "" dst-ports [ "8086" ] src-ports [ ]
@@ -156,10 +162,13 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_whatsapp" services "xmpp"
     spcli service group add name "dgrp_whatsapp" services "xmpp-ssl"
 
-
-
     ## Add DNS Rule
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+    spcli rule group new name "$ruleGrpInterface" > /dev/null
+    spcli rule new group "$ruleGrpInterface" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+
+    ## Create Surveillance Group
+    spcli rule group new name "$ruleGrpSurveillance" > /dev/null
+
     ## Add DNS Server
     spcli extc global set variable "GLOB_NAMESERVER" value [ "$dns1" "$dns2" ]
    
@@ -168,7 +177,7 @@ if [ "$input" = "y" ];then
         read -s -n 1 -p "Wird Terra Cloud Backup verwendet? (y/n)"$'\n' inputTerraCloud
     done
     if [ "$inputTerraCloud" = "y" ];then
-        spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+        spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "dgrp_terracloud" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     fi
 
     ## Whatsapp Abfrage
@@ -176,7 +185,7 @@ if [ "$input" = "y" ];then
         read -s -n 1 -p "Soll WhatsApp freigegeben werden? (y/n)"$'\n' inputWhatsapp
     done
     if [ "$inputWhatsapp" = "y" ];then
-        spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "dgrp_whatsapp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+        spcli rule new group "$ruleGrpInternet" src "$intNetwork" dst "$internetInterface" service "dgrp_whatsapp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     fi
 
 
@@ -187,18 +196,19 @@ if [ "$input" = "y" ];then
 
     if [ "$input_konnektor" = "y" ];then
         read -p "IP-Adresse:" konnektorIpAddress
-        ip route get "$konnektorIpAddress" > /dev/null 2>&1
+        ip route get "$konnektorIpAddress" > /dev/null
 
         while [ $? != "0" ] || [ -z "$konnektorIpAddress" ];do
             read -p"Konnektor IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' konnektorIpAddress
-            ip route get "$konnektorIpAddress" > /dev/null 2>&1
+            ip route get "$konnektorIpAddress" > /dev/null
         done
-        spcli node new name "TI-Konnektor" address "$konnektorIpAddress/32" zone "$intZone" > /dev/null 2>&1
-        spcli rule group new name "Konnektor" > /dev/null
+
+        spcli node new name "TI-Konnektor" address "$konnektorIpAddress/32" zone "$intZone" > /dev/null
+        spcli rule group new name "$ruleGrpTI" > /dev/null
         spcli service new name "Konnektor TCP 8443" proto "tcp" ct_helper "" dst-ports [ "8443" ] src-ports [ ]
-        spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
-        spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
-        spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "domain-tcp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+        spcli rule new group "$ruleGrpTI" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
+        spcli rule new group "$ruleGrpTI" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
+        spcli rule new group "$ruleGrpTI" src "TI-Konnektor" dst "$internetInterface" service "domain-tcp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     fi
 
     ## TK Anlage
@@ -208,15 +218,15 @@ if [ "$input" = "y" ];then
 
     if [ "$input_TK" = "y" ];then
         read -p "IP-Adresse:" tkIpAddress
-        ip route get "$tkIpAddress" > /dev/null 2>&1
+        ip route get "$tkIpAddress" > /dev/null
 
         while [ $? != "0" ] || [ -z "$tkIpAddress" ];do
             read -p"TK-Anlagen IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' tkIpAddress
-            ip route get "$tkIpAddress" > /dev/null 2>&1
+            ip route get "$tkIpAddress" > /dev/null
         done
-        spcli node new name "TK-Anlage" address "$tkIpAddress/32" zone "$intZone" > /dev/null 2>&1
-        spcli rule group new name "TK-Anlage Regeln" > /dev/null
-        spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+        spcli node new name "TK-Anlage" address "$tkIpAddress/32" zone "$intZone" > /dev/null
+        spcli rule group new name "$ruleGrpTI" > /dev/null
+        spcli rule new group "$ruleGrpTI" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null
     fi
 
 
@@ -273,7 +283,7 @@ if [ "$input" = "y" ];then
 
     if [ "$inputProxy" = "y" ];then
         ## Add ProxyCertificate
-        spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null 2>&1
+        spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
         CA_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "CA_Proxy" | cut -f1 -d$'\t')
         
         ## Enable SSL Proxy
