@@ -1,4 +1,6 @@
 #!/bin/sh
+####### Nicht anpassen #########
+isVersion12="0"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -24,20 +26,21 @@ email=""
 ############## Functions ######################
 ####################################################
 
-echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.1 by DerJusten"
+echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.11 by DerJusten"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
 
 if test -f "$cfg"; then
-    echo "Load variables"
+    echo "Lade Variablen von conf.cfg"
     source $dir/conf.cfg
     location=$cfgLoc
     organization=$cfgOrg
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
+    ServerAdminURL=$cfgServerUrl
 else
-    echo $cfg " not found"
+    echo $cfg " wurde nicht gefunden"
 fi
 
 
@@ -48,6 +51,7 @@ if case $version in "11"*) true;; *) false;; esac; then
 else
     echo "Version 12 wurde ermittelt"
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
+    isVersion12="1"
 fi
 
 ##interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
@@ -69,7 +73,6 @@ if [ "$input" = "y" ];then
     dtnow=$(date +"%m-%d-%Y_%T")
     echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
     spcli system config save name "autorules_$dtnow" 
-    echo "Deaktiviere alle ANY Regeln von '$intNetwork' nach '$internetInterface'"
 
     ## Delete default rules
     ## Abfrage
@@ -77,23 +80,24 @@ if [ "$input" = "y" ];then
         read -s -n 1 -p "Sollen die 'Default rules' gelöscht werden? (y/n)"$'\n' inputDelRules
     done
     if [ "$inputDelRules" = "y" ];then
-        id_rule1 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal-network ~auto-generated~" |cut -f1 -d$'\t')
+        id_rule1=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal-network ~auto-generated~" |cut -f1 -d$'\t')
         if [ ! -z $id_rule1 ];then
             spcli rule group delete id "$id_rule1"
         fi
 
-        id_rule2 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "dmz1-network ~auto-generated~" |cut -f1 -d$'\t')
+        id_rule2=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "dmz1-network ~auto-generated~" |cut -f1 -d$'\t')
         if [ ! -z $id_rule2 ];then
             spcli rule group delete id "$id_rule2"
         fi
 
-        id_rul3 =$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal" |cut -f1 -d$'\t')
+        id_rule3=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "default" |cut -f1 -d$'\t')
         if [ ! -z $id_rule3 ];then
             spcli rule group delete id "$id_rule3"
         fi
     fi
 
     ## Disable any rules from internal network to internet
+    echo "Deaktiviere alle ANY Regeln von '$intNetwork' nach '$internetInterface'"
     id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intNetwork | grep $internetInterface |cut -f1 -d$'\t') 
     while [ ! -z $id ];do
        spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
@@ -101,7 +105,7 @@ if [ "$input" = "y" ];then
     done
     echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
     
-    spcli rule group new name "Interne Regeln"
+    spcli rule group new name "Interne Regeln" > /dev/null
     ##Default Internet
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     ##NTP
@@ -151,10 +155,9 @@ if [ "$input" = "y" ];then
     spcli service group add name "dgrp_whatsapp" services "xmpp-ssl"
 
     ## Add DNS Rule
-    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ]
+    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
     ## Add DNS Server
     spcli extc global set variable "GLOB_NAMESERVER" value [ "9.9.9.9" "149.112.112.112" ]
-   
    
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
@@ -187,7 +190,7 @@ if [ "$input" = "y" ];then
             ip route get "$konnektorIpAddress" > /dev/null 2>&1
         done
         spcli node new name "TI-Konnektor" address "$konnektorIpAddress/32" zone "$intZone" > /dev/null 2>&1
-        spcli rule group new name "Konnektor"
+        spcli rule group new name "Konnektor" > /dev/null
         spcli service new name "Konnektor TCP 8443" proto "tcp" ct_helper "" dst-ports [ "8443" ] src-ports [ ]
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
@@ -208,7 +211,7 @@ if [ "$input" = "y" ];then
             ip route get "$tkIpAddress" > /dev/null 2>&1
         done
         spcli node new name "TK-Anlage" address "$tkIpAddress/32" zone "$intZone" > /dev/null 2>&1
-        spcli rule group new name "TK-Anlage Regeln"
+        spcli rule group new name "TK-Anlage Regeln" > /dev/null
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
 
@@ -231,17 +234,17 @@ if [ "$input" = "y" ];then
        
 
         ## Add VPN rules
-        spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ]
+        spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ] > /dev/null
         spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
-        spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0"
-        spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name"
-        spcli rule group new name "VPN Regeln"
+        spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0" > /dev/null
+        spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name" > /dev/null
+        spcli rule group new name "VPN Regeln" > /dev/null
         spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
 
         ## Create VPN Group
-        spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ]
+        spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
         vpn_support_pw=$(openssl rand -base64 24)
-        spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "grpVPN" ] 
+        spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "grpVPN" ] > /dev/null
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_l2tp_ip" value ""
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ip" value ""
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ipv6" value ""
@@ -291,60 +294,64 @@ if [ "$input" = "y" ];then
         webfilterID=$(spcli webfilter ruleset get | awk 'BEGIN {FS="|" }; {print $1 "\t" $2}' | grep security |cut -f1 -d$'\t')
         startRank=0
         # Waffen
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.5.3" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.5.3" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Porno & Erotik
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.2" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.2" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Erotik möglich
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.4" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
-        # Thread
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.2" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.4.4" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Abstoßend
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.6.0" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
-        # Proxy
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.8" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
-        #Hacking
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.1" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.6.0" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Spiele
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.11.0" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.11.0" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Spam Domains
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.5" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.5" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Social Media
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.31.2" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.31.2" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Tracking Strict
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.08.3" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.08.3" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Unseriöses Geld verdienen
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.15.35" action "blacklist-cat" rank "$startRank"
-        let $startRank=$startRank+1
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.15.35" action "blacklist-cat" rank "$startRank" > /dev/null
+        let startRank=$startRank+1
         # Parked Websites
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank"
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.4" action "blacklist-cat" rank "$startRank" > /dev/null
+
+
+                
+        if [ "$isVersion12" = "0" ];then
+            # Proxy (v11)
+            spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.8" action "blacklist-cat" rank "$startRank" > /dev/null
+            let startRank=$startRank+1
+            #Hacking (v11)
+            spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.1" action "blacklist-cat" rank "$startRank" > /dev/null
+            let startRank=$startRank+1
+                    # Thread (v11)
+            spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.28.2" action "blacklist-cat" rank "$startRank" > /dev/null
+            let startRank=$startRank+1
+        fi
         ##########################################################################
 
-        read -s -n 1 -p "Soll das CloudBackup aktiviert werden? (y/n)"$'\n' inputCloudBackup
-        if [ "$inputCloudBackup" = "y" ];then
-            read -p "Geben Sie das Passwort fuer das CloudBackup ein:"$'\n' inputCloudPw
-            if [ ! -z $inputCloudPw ];then
-                spcli system cloudbackup set password "$inputCloudPw"
-                spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
-            else
-                echo "Passwort darf nicht leer sein. Cloud Backup wurde nicht eingerichtet"
-            fi
+        ## Config Cloud Backup
+        echo "Erstelle Config Cloud Backup"
+        CloudPw=$(openssl rand -base64 24)
+        spcli system cloudbackup set password "$CloudPw"
+        spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
+
+        if [ -z $ServerAdminURL ];then
+            read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
         fi
 
-        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
         if [ ! -z $ServerAdminURL ];then
             spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
         fi
+
         ##Datenschutz Anonymisierung aktivieren
         spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
         spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
@@ -366,18 +373,41 @@ if [ "$input" = "y" ];then
         spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
         spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
     fi
-    echo "Vorgang abgeschlossen"
 
+    ## Autostart Konfig
+    while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
+        read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
+    done
+
+    if [ "$inputAutostart" = "y" ];then
+ 	    spcli system config set name "autorules_$dtnow" 
+    fi
+    spcli system config save name "autorules_$dtnow" 
     spcli appmgmt restart application "named"
     spcli appmgmt restart application "openvpn"
+    spcli appmgmt restart application "webfilter"
+    spcli appmgmt restart application "http_proxy"
+    spcli appmgmt restart application "ntpd"
 
-    echo "###### Zusammenfassung #######"
+    echo "Vorgang abgeschlossen"
     echo ""
-    echo "Konnektor IP:"$'\t'$konnektorIpAddress
-    echo "TK-Anlagen IP:"$'\t'$tkIpAddress
-    echo "Cloud Backup PW:"$'\t'$inputCloudPw
-    echo "Server URL:"$'\t'$ServerAdminURL 
-    echo "VPN Support Pw:"$'\t'$vpn_support_pw
+    echo "###################### Zusammenfassung #############################"
+    echo "# Konnektor IP:"$'\t'$'\t'$konnektorIpAddress
+    echo "# TK-Anlagen IP:"$'\t'$tkIpAddres
+    echo "# Cloud Backup PW:"$'\t'$CloudPw
+    echo "# Server URL:"$'\t'$'\t'$ServerAdminURL
+    echo "# VPN Support Pw:"$'\t'$vpn_support_pw
+    echo "####################################################################"
+
+    logfile=log.txt
+    echo "###################### Zusammenfassung #############################"
+    echo "# Konnektor IP:"$'\t'$'\t'$konnektorIpAddress >> $logfile
+    echo "# TK-Anlagen IP:"$'\t'$tkIpAddres >> $logfile
+    echo "# Cloud Backup PW:"$'\t'$CloudPw >> $logfile
+    echo "# Server URL:"$'\t'$'\t'$ServerAdminURL >> $logfile
+    echo "# VPN Support Pw:"$'\t'$vpn_support_pw >> $logfile
+    echo "####################################################################"
+
 else
     echo "Vorgang abgebrochen"
 fi
