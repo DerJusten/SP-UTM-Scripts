@@ -13,15 +13,15 @@ VPN_network_obj="vpn-c2s-network"
 CA_VPN="CA_RW_VPN"
 CS_VPN="CS_RW_VPN"
 VPN_Tun="10.8.0.0/24"
-VPN_SupportUser="support"
+VPN_SupportUser="vpn_support"
 VPN_SupportGrp="grpVPN"
 ####### Zertifikatseinstellungen für Proxy & VPN #########
 bits="2048"
 state="Deutschland"
-location=""
-organization=""
-organization_unit=""
-email=""
+location="Musterstadt"
+organization="Muster GmbH"
+organization_unit="EDV"
+email="mail@muster.com"
 ####################################################
 ############## Functions ######################
 ####################################################
@@ -231,6 +231,11 @@ if [ "$input" = "y" ];then
         spcli cert extension add id "$CS_VPN_ID" ext_name "Netscape Cert Type" ext_value "SSL Server"
         spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication" 
         spcli cert new bits $bits common_name "$CC_RW_Support" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client01" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client02" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client03" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client04" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client05" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
        
 
         ## Add VPN rules
@@ -259,7 +264,29 @@ if [ "$input" = "y" ];then
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_filtered" value "0"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_quarantine" value "0"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
-        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0"   
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0" 
+
+        for i in 1 2 3 4 5
+        do
+            vpn_client_pw=$(openssl rand -base64 24)
+            vpn_client_name="Client0"$i
+            spcli user new name "$vpn_client_name" password "$vpn_client_pw" groups [ "grpVPN" ] > /dev/null
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_l2tp_ip" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ip" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ipv6" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "password_length" value "8"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_name" value "$VPN_Name"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_certificate" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_gateway" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "language" value "DEFAULT"
+            spcli user attribute set name "$vpn_client_name" attribute "password_change" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_client_download" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_redirectgateway" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_download_attachments_filtered" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_download_attachments_quarantine" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_quarantined" value "1"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
+        done
     fi
 
     ################## SSL Proxy ########################
