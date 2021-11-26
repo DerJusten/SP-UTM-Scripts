@@ -1,70 +1,117 @@
 #!/bin/sh
-###### Name von VPN_CA ###########
-ca="CA_RW_VPN"
-ca_exists="y"
-####### Zertifikatseinstellungen für Proxy #########
+####### Nicht anpassen #########
+vpn_log="vpn-access.txt"
+## VPN Einstellungen
+VPN_Name="RW-VPN-U1194"
+VPN_network_obj="vpn-c2s-network" 
+CA_VPN="CA_RW_VPN"
+CS_VPN="CS_RW_VPN"
+VPN_Tun="10.8.0.0/24"
+VPN_SupportUser="support"
+VPN_SupportGrp="grpSupportVPN"
+VPN_UserGrp="grpUserVPN"
+####### Zertifikatseinstellungen für Proxy & VPN #########
 bits="2048"
 state="Deutschland"
-location="Neuenhaus"
-organization="maxbenedikt GmbH"
-organization_unit="IT"
-email="info@maxbenedikt.com"
-############################################################
-##Create new config
-dtnow=$(date +"%m-%d-%Y_%T")
-spcli system config save name "autovpn_$dtnow"
+location="Musterstadt"
+organization="Muster GmbH"
+organization_unit="EDV"
+email="mail@muster.com"
+####################################################
+# Get current directory and read conf.cfg
+dir=$(cd `dirname $0` && pwd)
+cfg=$dir"/conf.cfg"
 
-read -p "Ist eine CA für VPN vorhanden?:"$'\n' ca_exists
-
-if [ "$ca_exists" = "n" ];then
-    echo "CA wird erstellt"
-    read -p "Name der CA:"$'\n' ca
-    if [ -z "$ca" ];then
-        echo "CA name can't be empty"
-        exit 1
-    fi
-elif [ "$ca_exists" = "n" ];then
-    read -p "Name der CA:"$'\n' ca
+if test -f "$cfg"; then
+    echo "Lade Variablen von conf.cfg"
+    source $dir/conf.cfg
+    location=$cfgLoc
+    organization=$cfgOrg
+    organization_unit=$cfgOrgUnit
+    email=$cfgEmail
 else
-    echo "ungueltige Eingabe"
-    exit 1
+    echo $cfg " wurde nicht gefunden"
 fi
+## Erstelle neue Config
+    dtnow=$(date +"%m-%d-%Y_%T")
+    echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
+    spcli system config save name "vpn_script_$dtnow" 
+  ## Create CA VPN
+        spcli cert new bits $bits common_name "$CA_VPN" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        CA_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CA_VPN" | cut -f1 -d$'\t')
+    ##Create CS VPN
+        spcli cert new bits $bits common_name "$CS_VPN" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        CS_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CS_VPN" | cut -f1 -d$'\t')
+        spcli cert extension add id "$CS_VPN_ID" ext_name "Netscape Cert Type" ext_value "SSL Server"
+        spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication" 
+    ## Create User Certificate
+        spcli cert new bits $bits common_name "VPN_Support" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client01" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client02" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client03" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client04" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        spcli cert new bits $bits common_name "VPN_Client05" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+       
 
-ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep $ca | cut -f1 -d$'\t')
-if [ -z "$ID" ];then
-    echo "CA not found"
-    exit 1
-fi
+        ## Add VPN rules
+        spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ] > /dev/null
+        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
+        spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0" > /dev/null
+        spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name" > /dev/null
+        spcli rule group new name "VPN Regeln" > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
 
-input="x"
-user=""
-password=""
-##rework?
-while [ "true" = "true" ]; do
-    read -n 1 -s -p "Soll ein VPN Benutzer hinzugefügt werden? (y/n):"$'\n' input
+        ## Create VPN Group
+        spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
+        id_SupportGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_SupportGrp" |cut -f1)
+        spcli user group set id "$id_SupportGrp" name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] ibf_flags [ "SSLVPN" ]
 
-    if [ "$input" = "y" ];then
+        spcli user group new name "$VPN_UserGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
+        id_UserGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_UserGrp" |cut -f1)
 
-        while [ ${#user} -lt 4 ]; do
-            read -p "Benutzername:"$'\n' user
+        ## Create Support User
+        vpn_support_pw=$(openssl rand -base64 24)        
+        spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "$VPN_SupportGrp" ] > /dev/null
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_l2tp_ip" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ip" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ipv6" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "password_length" value "8"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_name" value "$VPN_Name"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_certificate" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_gateway" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "language" value "DEFAULT"
+        spcli user attribute set name "$VPN_SupportUser" attribute "password_change" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_client_download" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_redirectgateway" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_filtered" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_quarantine" value "0"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
+        spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0"
+        echo "######### VPN Zugänge ##########" >> $vpn_log
+        echo "# Name:"$'\t' $VPN_SupportUser$'\t'"Passwort:"$'\t' $vpn_support_pw >> $vpn_log
+        ## Create 5x Clients
+        for i in 1 2 3 4 5
+        do
+            vpn_client_pw=$(openssl rand -base64 12)
+            vpn_client_name="Client0"$i
+            spcli user new name "$vpn_client_name" password "$vpn_client_pw" groups [ "$VPN_UserGrp" ] > /dev/null
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_l2tp_ip" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ip" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ipv6" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "password_length" value "8"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_name" value "$VPN_Name"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_certificate" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_gateway" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "language" value "DEFAULT"
+            spcli user attribute set name "$vpn_client_name" attribute "password_change" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_client_download" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_redirectgateway" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_download_attachments_filtered" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_download_attachments_quarantine" value "0"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_quarantined" value "1"
+            spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
+            echo "# Name:"$'\t' $vpn_client_name $'\t'"Passwort:"$'\t' $vpn_client_pw >> $vpn_log
         done
-
-        while [ ${#password} -lt 6 ]; do
-            read -s -p "Passwort (mindestens 6 Zeichen):"$'\n' password
-        done
-
-        if [ ${#user} -gt 3 ] && [ ${#password} -gt 5 ]; then
-            ##echo "$password"
-            echo -e "$user" '\t' "$password"
-            spcli user new name "$user" password "$password"
-            cn="CC_"$user
-            spcli cert new bits $bits common_name "$cn" issuer_id "$ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null 2>&1 
-
-            else
-            echo "nope"
-        fi
-    else
-        echo "Vorgang abgebrochen."
-        break
-    fi
-fi
+        echo "##############################" >> $vpn_log
+        echo "VPN Konfiguration abgeschlossen"
+        cat $vpn_log
