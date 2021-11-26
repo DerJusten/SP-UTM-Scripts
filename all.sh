@@ -416,6 +416,25 @@ if [ "$input" = "y" ];then
     spcli appmgmt restart application "http_proxy"
     spcli appmgmt restart application "ntpd"
 
+    echo "Vorgang abgeschlossen"
+    echo ""
+    echo "###################### Zusammenfassung #############################"
+    echo "# Konnektor IP:"$'\t'$'\t'$konnektorIpAddress
+    echo "# TK-Anlagen IP:"$'\t'$tkIpAddres
+    echo "# Cloud Backup PW:"$'\t'$CloudPw
+    echo "# Server URL:"$'\t'$'\t'$ServerAdminURL
+    echo "# VPN Support Pw:"$'\t'$vpn_support_pw
+    echo "####################################################################"
+
+    logfile=log.txt
+    echo "###################### Zusammenfassung #############################"
+    echo "# Konnektor IP:"$'\t'$'\t'$konnektorIpAddress >> $logfile
+    echo "# TK-Anlagen IP:"$'\t'$tkIpAddres >> $logfile
+    echo "# Cloud Backup PW:"$'\t'$CloudPw >> $logfile
+    echo "# Server URL:"$'\t'$'\t'$ServerAdminURL >> $logfile
+    echo "# VPN Support Pw:"$'\t'$vpn_support_pw >> $logfile
+    echo "####################################################################"
+
 else
     echo "Vorgang abgebrochen"
 fi
