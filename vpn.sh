@@ -64,12 +64,14 @@ fi
         ## Create VPN Group
         spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
         id_SupportGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_SupportGrp" |cut -f1)
-        spcli user group set id "$id_SupportGrp" name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] ibf_flags [ "SSLVPN" ]
+        spcli user group set id "$id_SupportGrp" name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] ibf_flags [ "SSLVPN" ] > /dev/null
 
         spcli user group new name "$VPN_UserGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
-        id_UserGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_UserGrp" |cut -f1)
+        id_UserGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_UserGrp" |cut -f1) 
+        spcli user group set id "$id_UserGrp" name "$VPN_UserGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] ibf_flags [ "SSLVPN" ] > /dev/null
 
         ## Create Support User
+        echo "Erstelle VPN User " $VPN_SupportUser
         vpn_support_pw=$(openssl rand -base64 24)        
         spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "$VPN_SupportGrp" ] > /dev/null
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_l2tp_ip" value ""
@@ -94,6 +96,7 @@ fi
         do
             vpn_client_pw=$(openssl rand -base64 12)
             vpn_client_name="Client0"$i
+            echo "Erstelle VPN User " $vpn_client_name
             spcli user new name "$vpn_client_name" password "$vpn_client_pw" groups [ "$VPN_UserGrp" ] > /dev/null
             spcli user attribute set name "$vpn_client_name" attribute "vpn_l2tp_ip" value ""
             spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ip" value ""
@@ -115,3 +118,6 @@ fi
         echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
         cat $vpn_log
+
+    spcli appmgmt restart application "openvpn"
+    spcli appmgmt restart application "webfilter"
