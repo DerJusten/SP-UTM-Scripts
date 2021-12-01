@@ -18,9 +18,8 @@ echo "Skript zur Proxy Ersteinrichtung"
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
-    echo "Version 11 wurde ermittelt"
+    isVersion12="0"
 else
-    echo "Version 12 wurde ermittelt"
     isVersion12="1"
 fi
 

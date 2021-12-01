@@ -31,10 +31,8 @@ fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
-    echo "Version 11 wurde ermittelt"
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
 else
-    echo "Version 12 wurde ermittelt"
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
     isVersion12="1"
 fi
@@ -67,6 +65,7 @@ if [ "$input" = "y" ];then
     while [ "$inputDelRules" != "n" ] && [ "$inputDelRules" != "y" ];do
         read -s -n 1 -p "Sollen die 'Default rules' gelöscht werden? (y/n)"$'\n' inputDelRules
     done
+
     if [ "$inputDelRules" = "y" ];then
         id_rule1=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2 "\t" $3}' | grep -w "internal-network ~auto-generated~" |cut -f1 -d$'\t')
         if [ ! -z $id_rule1 ];then
@@ -88,7 +87,7 @@ if [ "$input" = "y" ];then
     echo "Deaktiviere alle ANY Regeln von '$intNetwork' nach '$internetInterface'"
     id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED | grep $intNetwork | grep $internetInterface |cut -f1 -d$'\t') 
     while [ ! -z $id ];do
-       spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ]
+       spcli rule set id "$id" flags [ "ACCEPT" "LOG" "HIDENAT" "DISABLED" ] > /dev/null 2>&1
        id=$(spcli rule get | awk 'BEGIN {FS = "|" };  {print $3 "\t" $4 "\t" $5 "\t" $6 "\t" $9}' | grep any| grep ACCEPT | grep -v DISABLED |grep $intNetwork | grep $internetInterface |cut -f1 -d$'\t')
     done
     echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
