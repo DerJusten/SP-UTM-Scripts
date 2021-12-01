@@ -67,7 +67,7 @@ if [ "$input" = "y" ];then
     if [ "$inputRules" = "y" ];then
         if test -f "/tmp/rules.sh"; then
             chmod +x /tmp/rules.sh
-            sh /tmp/rules.sh
+            sh /tmp/rules.sh 0
         else
             echo "Script für die Regeln wurde nicht gefunden"
         fi
