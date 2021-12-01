@@ -1,11 +1,17 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
+createConfigBackup=$1
 ####### Anpassen, wenn notwendig #########
-intZone="internal"
+####### Zertifikatseinstellungen für VPN #########
+bits="2048"
+state="Deutschland"
+location="Musterstadt"
+organization="Muster GmbH"
+organization_unit="EDV"
+email="mail@muster.com"
+#####################################################
 intNetwork="internal-network"
-intInterface="internal-interface"
-extInterface="external-interface"
 internetInterface="internet"
 
 echo "Skript zur Proxy Ersteinrichtung"
@@ -13,32 +19,44 @@ echo "Skript zur Proxy Ersteinrichtung"
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
     echo "Version 11 wurde ermittelt"
-    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
 else
     echo "Version 12 wurde ermittelt"
-    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
     isVersion12="1"
 fi
 
-info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
-interfaceID=$(echo $info | cut -f1 -d$' ')
-interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
+checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
 
-if [ -z $interfaceID ]; then
-    echo "Es konnte die interne IP-Adresse nicht ermittelt werden. Bitte überprüfen Sie ob die Zonennamen von der Firewall mit dem Skript übereinstimmen."
+if [ -z $checkIntNetwork ]; then
+    echo "Es konnte $intNetwork nicht gefunden werden"
     exit 1
 fi
 
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
-    read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
+    read -s -n 1 -p "Quellnetzwerk: $intNetwork Zielnetzwerk: $internetInterface Ist dies korrekt(y/n)?"$'\n' input
 done
 ##user confirmed
+if [ "$input" = "y" ];then
 
     ##Create new config
-    dtnow=$(date +"%m-%d-%Y_%T")
-    echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
-    spcli system config save name "proxy_$dtnow" 
+    if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
+        dtnow=$(date +"%m-%d-%Y_%T")
+        echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
+        spcli system config save name "proxy_$dtnow" 
+    fi
+    # Get current directory and read conf.cfg
+    dir=$(cd `dirname $0` && pwd)
+    cfg=$dir"/conf.cfg"
 
+    if test -f "$cfg"; then
+        echo "Lade Variablen von conf.cfg"
+        source $dir/conf.cfg
+        location=$cfgLoc
+        organization=$cfgOrg
+        organization_unit=$cfgOrgUnit
+        email=$cfgEmail
+    else
+        echo $cfg " wurde nicht gefunden"
+    fi
     ################## SSL Proxy ########################
         ## Add ProxyCertificate
         spcli cert new bits $bits common_name CA_Proxy valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null 2>&1
@@ -53,14 +71,18 @@ done
         spcli extc value set application "http_proxy" variable "SSLPROXY_VERIFY_PEER" value "0"
         spcli extc value set application "http_proxy" variable "ENABLE_TRANSPARENT" value "1"
 
-        ## Delete existing http rule
-        Node_ID=$(spcli rule transparent get |awk 'BEGIN {FS = "|" }; {print $3 "\t" $2}' |grep -w http | cut -f1 -d$'\t')
-        if [ ! -z $Node_ID ];then
-               spcli rule transparent delete node_id "$Node_ID"
+        ## Delete existing Rules
+        Node_IDs=$(spcli rule transparent get |awk 'BEGIN {FS = "|" }; {print $3 "\t" $2 "\t" $5 "\t" $6}' |grep internal |grep -v pop |cut -f1 -d$'\t')
+        if [ ! -z "$Node_IDs" ];then
+            for i in $Node_IDs
+            do
+                spcli rule transparent delete node_id "$i"
+            done   
         fi
-         spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
+
+        spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
         spcli rule transparent add id "3" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
-        spcli appmgmt restart application "http_proxy"
+
 
         ## Webfilter Categories
         webfilterID=$(spcli webfilter ruleset get | awk 'BEGIN {FS="|" }; {print $1 "\t" $2}' | grep security |cut -f1 -d$'\t')
@@ -87,7 +109,7 @@ done
         spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.31.2" action "blacklist-cat" rank "$startRank" > /dev/null
         let startRank=$startRank+1
         # Tracking Strict
-        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.08.3" action "blacklist-cat" rank "$startRank" > /dev/null
+        spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.80.3" action "blacklist-cat" rank "$startRank" > /dev/null
         let startRank=$startRank+1
         # Unseriöses Geld verdienen
         spcli webfilter rule new ruleset_oid "$webfilterID" expression "127.0.15.35" action "blacklist-cat" rank "$startRank" > /dev/null
@@ -108,9 +130,12 @@ done
             let startRank=$startRank+1
         fi
         spcli appmgmt restart application "http_proxy"
+
         echo "HTTP Proxy Einstellungen abgeschlossen"
         ##########################################################################
-
+    else
+        echo "Vorgang abgebrochen"
+fi
 
 
 

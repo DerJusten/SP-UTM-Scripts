@@ -1,14 +1,13 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
+createConfigBackup=$1
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
 intInterface="internal-interface"
 extInterface="external-interface"
 internetInterface="internet"
-
-
 ############## Functions ######################
 ####################################################
 
@@ -40,7 +39,6 @@ else
     isVersion12="1"
 fi
 
-##interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
@@ -50,15 +48,19 @@ if [ -z $interfaceID ]; then
     exit 1
 fi
 
+
 while [ "$input" != "n" ] && [ "$input" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
 ##user confirmed
 if [ "$input" = "y" ];then
+    
     ##Create new config
-    dtnow=$(date +"%m-%d-%Y_%T")
-    echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
-    spcli system config save name "autorules_$dtnow" 
+    if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
+        dtnow=$(date +"%m-%d-%Y_%T")
+        echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
+        spcli system config save name "autorules_$dtnow"  
+    fi
 
     ## Delete default rules
     ## Abfrage
@@ -199,62 +201,6 @@ if [ "$input" = "y" ];then
         spcli rule group new name "TK-Anlage Regeln" > /dev/null
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
-
-
-
-        ## Config Cloud Backup
-        echo "Erstelle Config Cloud Backup"
-        CloudPw=$(openssl rand -base64 24)
-        spcli system cloudbackup set password "$CloudPw"
-        spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
-
-        if [ -z $ServerAdminURL ];then
-            read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
-        fi
-
-        if [ ! -z $ServerAdminURL ];then
-            spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
-        fi
-
-        ##Datenschutz Anonymisierung aktivieren
-        spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
-        spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
-        spcli extc value set application "spibfd" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "syslog" variable "ANONYMIZELOGS_IPSEC" value [ "1" ]
-        spcli extc value set application "syslog" variable "ANONYMIZELOGS_DHCP" value [ "1" ]
-        spcli extc value set application "syslog" variable "ANONYMIZELOGS_ULOG" value [ "1" ]
-        spcli extc value set application "wap" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "sshd" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "squid-reverse" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "spf2bd" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "spcgi" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "smtpd" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "securepoint_firewall" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "openvpn" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "mailfilter" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "l2tpd" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "ipsec" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
-        spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
-    fi
-
-    ## Autostart Konfig
-    while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
-        read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
-    done
-
-    if [ "$inputAutostart" = "y" ];then
- 	    spcli system config set name "autorules_$dtnow" 
-    fi
-    spcli system config save name "autorules_$dtnow" 
-    spcli appmgmt restart application "named"
-    spcli appmgmt restart application "openvpn"
-    spcli appmgmt restart application "webfilter"
-    spcli appmgmt restart application "http_proxy"
-    spcli appmgmt restart application "ntpd"
-
-
-
 else
     echo "Vorgang abgebrochen"
 fi
