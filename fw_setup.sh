@@ -1,14 +1,13 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
+vpn_log="/tmp/access.txt"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
 intInterface="internal-interface"
 extInterface="external-interface"
 internetInterface="internet"
-############## Functions ######################
-####################################################
 
 echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.11 by DerJusten"
 # Get current directory and read conf.cfg
@@ -54,6 +53,7 @@ done
 
 ##user confirmed
 if [ "$input" = "y" ];then
+
     ##Create new config
     dtnow=$(date +"%m-%d-%Y_%T")
     echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
@@ -72,7 +72,7 @@ if [ "$input" = "y" ];then
             echo "Script für die Regeln wurde nicht gefunden"
         fi
     fi
-
+    ##################################################################################
     #### Abfrage VPN Script ####
     while [ "$inputVPN" != "n" ] && [ "$inputVPN" != "y" ];do
         read -s -n 1 -p "Soll VPN eingerichtet werden? Es darf keine VPN bereits existieren! (y/n)"$'\n' inputVPN
@@ -86,7 +86,7 @@ if [ "$input" = "y" ];then
             echo "Script für die Einrichtung von VPN wurde nicht gefunden"
         fi
     fi
-
+    ##################################################################################
     #### Abfrage VPN Script ####
     while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
         read -s -n 1 -p "Soll der transparente Proxy eingerichtet werden? (y/n)"$'\n' inputProxy
@@ -100,12 +100,13 @@ if [ "$input" = "y" ];then
             echo "Script für die Einrichtung des transparenten Proxys wurde nicht gefunden"
         fi
     fi
-
+    ##################################################################################
     ## Config Cloud Backup
     echo "Erstelle Config Cloud Backup"
     CloudPw=$(openssl rand -base64 24)
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
+    echo "# Konfig Cloud Backup PW:"$'\t' $CloudPw$ >> $vpn_log
 
     if [ -z $ServerAdminURL ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
@@ -150,7 +151,7 @@ if [ "$input" = "y" ];then
     spcli appmgmt restart application "webfilter"
     spcli appmgmt restart application "http_proxy"
     spcli appmgmt restart application "ntpd"
-
+    echo "####################################" >> $vpn_log
 else
     echo "Vorgang abgebrochen"
 fi
