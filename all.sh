@@ -34,10 +34,6 @@ cfg=$dir"/conf.cfg"
 if test -f "$cfg"; then
     echo "Lade Variablen von conf.cfg"
     source $dir/conf.cfg
-    location=$cfgLoc
-    organization=$cfgOrg
-    organization_unit=$cfgOrgUnit
-    email=$cfgEmail
     ServerAdminURL=$cfgServerUrl
 else
     echo $cfg " wurde nicht gefunden"

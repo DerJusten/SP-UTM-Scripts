@@ -1,6 +1,6 @@
 #!/bin/sh
 ####### Nicht anpassen #########
-vpn_log="vpn-access.txt"
+vpn_log="/tmp/vpn-access.txt"
 ## VPN Einstellungen
 VPN_Name="RW-VPN-U1194"
 VPN_network_obj="vpn-c2s-network" 
@@ -10,7 +10,7 @@ VPN_Tun="10.8.0.0/24"
 VPN_SupportUser="support"
 VPN_SupportGrp="grpSupportVPN"
 VPN_UserGrp="grpUserVPN"
-####### Zertifikatseinstellungen für Proxy & VPN #########
+####### Zertifikatseinstellungen für VPN #########
 bits="2048"
 state="Deutschland"
 location="Musterstadt"
