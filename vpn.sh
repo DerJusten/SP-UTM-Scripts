@@ -64,8 +64,6 @@ fi
         spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
         spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0" > /dev/null
         spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name" > /dev/null
-        spcli rule group new name "VPN Regeln" > /dev/null
-        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
 
         ## Create VPN Group
         spcli user group new name "$VPN_SupportGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
@@ -75,6 +73,13 @@ fi
         spcli user group new name "$VPN_UserGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] > /dev/null
         id_UserGrp=$(spcli user group get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' |grep "$VPN_UserGrp" |cut -f1) 
         spcli user group set id "$id_UserGrp" name "$VPN_UserGrp" directory_name "" permission [ "WEB_USER" "VPN_OPENVPN" ] ibf_flags [ "SSLVPN" ] > /dev/null
+
+        ## Create Rules
+        spcli rule group new name "VPN Regeln" > /dev/null
+        
+        spcli rule new group "VPN Regeln" src "$VPN_SupportGrp" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intInterface" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        
 
         ## Create Support User
         echo "Erstelle VPN User " $VPN_SupportUser
