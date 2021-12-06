@@ -13,6 +13,7 @@ VPN_SupportGrp="grpSupportVPN"
 VPN_UserGrp="grpUserVPN"
 #### Interface #########
 intInterface="internal-interface"
+intNetwork="internal-network"
 ####### Zertifikatseinstellungen für VPN #########
 bits="2048"
 state="Deutschland"
@@ -33,6 +34,7 @@ if test -f "$cfg"; then
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
     intInterface=$cfgIntInterface
+    intNetwork=$cfgIntNetwork
 else
     echo $cfg " wurde nicht gefunden"
 fi
@@ -78,7 +80,7 @@ fi
         spcli rule group new name "VPN Regeln" > /dev/null
         
         spcli rule new group "VPN Regeln" src "$VPN_SupportGrp" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
-        spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intInterface" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         
         ## Create Support User
         echo "Erstelle VPN User " $VPN_SupportUser
