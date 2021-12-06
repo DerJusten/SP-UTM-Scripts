@@ -14,7 +14,7 @@ email="mail@muster.com"
 intNetwork="internal-network"
 internetInterface="internet"
 
-echo "Skript zur Proxy Ersteinrichtung"
+echo "######## Skript zur Proxy Ersteinrichtung #############"
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
@@ -22,6 +22,7 @@ if case $version in "11"*) true;; *) false;; esac; then
 else
     isVersion12="1"
 fi
+
 
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
 
@@ -53,6 +54,8 @@ if [ "$input" = "y" ];then
         organization=$cfgOrg
         organization_unit=$cfgOrgUnit
         email=$cfgEmail
+        intNetwork=$cfgIntNetwork
+        internetInterface=$cfgInternetInterface
     else
         echo $cfg " wurde nicht gefunden"
     fi
