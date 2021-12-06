@@ -261,7 +261,7 @@ if [ "$input" = "y" ];then
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_quarantine" value "0"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0" 
-    
+
 
         for i in 1 2 3 4 5
         do
