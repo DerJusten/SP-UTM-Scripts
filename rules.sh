@@ -11,13 +11,12 @@ internetInterface="internet"
 ############## Functions ######################
 ####################################################
 
-echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.11 by DerJusten"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
 
 if test -f "$cfg"; then
-    echo "Lade Variablen von conf.cfg"
+    
     source $dir/conf.cfg
     location=$cfgLoc
     organization=$cfgOrg
@@ -46,13 +45,6 @@ if [ -z $interfaceID ]; then
     exit 1
 fi
 
-
-while [ "$input" != "n" ] && [ "$input" != "y" ];do
-    read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
-done
-##user confirmed
-if [ "$input" = "y" ];then
-    
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
         dtnow=$(date +"%m-%d-%Y_%T")
@@ -200,6 +192,4 @@ if [ "$input" = "y" ];then
         spcli rule group new name "TK-Anlage Regeln" > /dev/null
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
-else
-    echo "Vorgang abgebrochen"
-fi
+
