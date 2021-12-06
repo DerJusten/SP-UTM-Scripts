@@ -133,9 +133,7 @@ fi
             ## Sleep script seems to skip sometimes user
             #sleep 0.5
         done
-        echo "##############################" >> $vpn_log
+        #echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
         cat $vpn_log
 
-    spcli appmgmt restart application "openvpn"
-    spcli appmgmt restart application "webfilter"

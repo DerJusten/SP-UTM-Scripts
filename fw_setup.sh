@@ -8,7 +8,9 @@ intNetwork="internal-network"
 intInterface="internal-interface"
 extInterface="external-interface"
 internetInterface="internet"
-
+dnsServer1="9.9.9.9"
+dnsServer2="149.112.112.112"
+################################################################
 echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.11 by DerJusten"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
@@ -148,7 +150,10 @@ if [ "$input" = "y" ];then
         spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
         spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
     fi
-
+    ## Add DNS Server
+    echo "Setze DNS Server"
+    spcli extc global set variable "GLOB_NAMESERVER" value [ "$dnsServer1" "$dnsServer2" ]
+   
 
     ## Autostart Konfig
     while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
@@ -159,6 +164,7 @@ if [ "$input" = "y" ];then
     if [ "$inputAutostart" = "y" ];then
  	    spcli system config set name "autorules_$dtnow" 
     fi
+    echo "Starte Dienste neu"
     spcli system config save name "autorules_$dtnow" 
     spcli appmgmt restart application "named"
     spcli appmgmt restart application "openvpn"
@@ -166,6 +172,8 @@ if [ "$input" = "y" ];then
     spcli appmgmt restart application "http_proxy"
     spcli appmgmt restart application "ntpd"
     echo "####################################" >> $vpn_log
+    echo "########### Zugänge ################"
+    echo $vpn_log
 else
     echo "Vorgang abgebrochen"
 fi
