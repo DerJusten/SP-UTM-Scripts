@@ -195,4 +195,7 @@ fi
         spcli rule group new name "TK-Anlage Regeln" > /dev/null
         spcli rule new group "TK-Anlage Regeln" src "TK-Anlage" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     fi
+    spcli rule group new name "Portweiterleitung" > /dev/null
+    spcli rule group new name "Test" > /dev/null
+    spcli rule new group "Test" src "$intNetwork" dst "$internetInterface" service "any" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" "DISABLED" ] nat_node "$extInterface" > /dev/null 2>&1
 
