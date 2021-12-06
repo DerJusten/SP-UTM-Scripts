@@ -15,13 +15,18 @@ dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
 
 if test -f "$cfg"; then
-    echo "Lade Variablen von conf.cfg"
+    
     source $dir/conf.cfg
     location=$cfgLoc
     organization=$cfgOrg
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
     ServerAdminURL=$cfgServerUrl
+    intZone=$cfgIntZone
+    intNetwork=$cfgIntNetwork
+    intInterface=$cfgIntInterface
+    extInterface=$cfgExtInterface
+    internetInterface=$cfgInternetInterface
 else
     echo $cfg " wurde nicht gefunden"
 fi

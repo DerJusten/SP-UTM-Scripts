@@ -23,6 +23,11 @@ if test -f "$cfg"; then
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
     ServerAdminURL=$cfgServerUrl
+    intZone=$cfgIntZone
+    intNetwork=$cfgIntNetwork
+    intInterface=$cfgIntInterface
+    extInterface=$cfgExtInterface
+    internetInterface=$cfgInternetInterface
 else
     echo $cfg " wurde nicht gefunden"
 fi

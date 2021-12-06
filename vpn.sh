@@ -11,6 +11,8 @@ VPN_Tun="10.8.0.0/24"
 VPN_SupportUser="support"
 VPN_SupportGrp="grpSupportVPN"
 VPN_UserGrp="grpUserVPN"
+#### Interface #########
+intInterface="internal-interface"
 ####### Zertifikatseinstellungen für VPN #########
 bits="2048"
 state="Deutschland"
@@ -30,6 +32,7 @@ if test -f "$cfg"; then
     organization=$cfgOrg
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
+    intInterface=$cfgIntInterface
 else
     echo $cfg " wurde nicht gefunden"
 fi
