@@ -121,9 +121,11 @@ if [ "$input" = "y" ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
     fi
 
+
     while [ "$inputDS" != "n" ] && [ "$inputDS" != "y" ];do
-        read -s -n 1 -p "Sollen die Logs anonymisiert werden(y/n)?"$'\n' input
+        read -s -n 1 -p "Sollen die Logs anonymisiert werden(y/n)?"$'\n' inputDS
     done
+
     if [ "$inputDS" = "y" ];then
         ##Datenschutz Anonymisierung aktivieren
         spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
@@ -147,7 +149,7 @@ if [ "$input" = "y" ];then
         spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
     fi
 
-    
+
     ## Autostart Konfig
     while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
         read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
