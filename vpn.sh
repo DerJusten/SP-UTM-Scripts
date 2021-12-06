@@ -46,7 +46,7 @@ fi
         echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
         spcli system config save name "vpn_$dtnow"  
     fi 
-    echo "Erstelle Zertifikate"
+  
   ## Create CA VPN
         spcli cert new bits $bits common_name "$CA_VPN" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
         CA_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CA_VPN" | cut -f1 -d$'\t')
@@ -57,11 +57,11 @@ fi
         spcli cert extension add id "$CS_VPN_ID" ext_name "X509v3 Extended Key Usage" ext_value "TLS Web Server Authentication" 
     ## Create User Certificate
         spcli cert new bits $bits common_name "VPN_Support" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
-        spcli cert new bits $bits common_name "VPN_Client01" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
-        spcli cert new bits $bits common_name "VPN_Client02" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
-        spcli cert new bits $bits common_name "VPN_Client03" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
-        spcli cert new bits $bits common_name "VPN_Client04" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
-        spcli cert new bits $bits common_name "VPN_Client05" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+       #spcli cert new bits $bits common_name "VPN_Client01" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        #spcli cert new bits $bits common_name "VPN_Client02" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+       # spcli cert new bits $bits common_name "VPN_Client03" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        #spcli cert new bits $bits common_name "VPN_Client04" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
+        #spcli cert new bits $bits common_name "VPN_Client05" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
        
 
         ## Add VPN rules
@@ -113,6 +113,7 @@ fi
             vpn_client_name="Client0"$i
             echo "Erstelle VPN User " $vpn_client_name
             spcli user new name "$vpn_client_name" password "$vpn_client_pw" groups [ "$VPN_UserGrp" ] > /dev/null
+             spcli cert new bits $bits common_name "CC_$vpn_client_name" issuer_id "$CA_VPN_ID" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
             spcli user attribute set name "$vpn_client_name" attribute "vpn_l2tp_ip" value ""
             spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ip" value ""
             spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ipv6" value ""
@@ -130,7 +131,7 @@ fi
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
             echo "# Name:"$'\t' $vpn_client_name $'\t'"Passwort:"$'\t' $vpn_client_pw >> $vpn_log
             ## Sleep script seems to skip sometimes user
-            sleep 0.5
+            #sleep 0.5
         done
         echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
