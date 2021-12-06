@@ -22,6 +22,7 @@ organization="Muster GmbH"
 organization_unit="EDV"
 email="mail@muster.com"
 ####################################################
+
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
@@ -38,12 +39,14 @@ if test -f "$cfg"; then
 else
     echo $cfg " wurde nicht gefunden"
 fi
+
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
         dtnow=$(date +"%m-%d-%Y_%T")
         echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
         spcli system config save name "vpn_$dtnow"  
     fi 
+    echo "Erstelle Zertifikate"
   ## Create CA VPN
         spcli cert new bits $bits common_name "$CA_VPN" valid_since "2021-01-01-00-00-00" valid_till "2037-12-31-23-59-59" country "DE" state "$state" location "$location" organization "$organization" organization_unit "$organization_unit" email "$email" > /dev/null
         CA_VPN_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "$CA_VPN" | cut -f1 -d$'\t')

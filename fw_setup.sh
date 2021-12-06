@@ -121,31 +121,38 @@ if [ "$input" = "y" ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
     fi
 
-    ##Datenschutz Anonymisierung aktivieren
-    spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
-    spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
-    spcli extc value set application "spibfd" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "syslog" variable "ANONYMIZELOGS_IPSEC" value [ "1" ]
-    spcli extc value set application "syslog" variable "ANONYMIZELOGS_DHCP" value [ "1" ]
-    spcli extc value set application "syslog" variable "ANONYMIZELOGS_ULOG" value [ "1" ]
-    spcli extc value set application "wap" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "sshd" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "squid-reverse" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "spf2bd" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "spcgi" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "smtpd" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "securepoint_firewall" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "openvpn" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "mailfilter" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "l2tpd" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "ipsec" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
-    spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
+    while [ "$inputDS" != "n" ] && [ "$inputDS" != "y" ];do
+        read -s -n 1 -p "Sollen die Logs anonymisiert werden(y/n)?"$'\n' input
+    done
+    if [ "$inputDS" = "y" ];then
+        ##Datenschutz Anonymisierung aktivieren
+        spcli extc value set application "syslog" variable "ANONYMIZELOGS_SMTP" value [ "1" ]
+        spcli extc value set application "syslog" variable "ANONYMIZELOGS_OPEN_VPN" value [ "1" ]
+        spcli extc value set application "spibfd" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "syslog" variable "ANONYMIZELOGS_IPSEC" value [ "1" ]
+        spcli extc value set application "syslog" variable "ANONYMIZELOGS_DHCP" value [ "1" ]
+        spcli extc value set application "syslog" variable "ANONYMIZELOGS_ULOG" value [ "1" ]
+        spcli extc value set application "wap" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "sshd" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "squid-reverse" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "spf2bd" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "spcgi" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "smtpd" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "securepoint_firewall" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "openvpn" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "mailfilter" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "l2tpd" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "ipsec" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "http_proxy" variable "ANONYMIZELOGS" value [ "1" ]
+        spcli extc value set application "cvpn" variable "ANONYMIZELOGS" value [ "1" ]
+    fi
+
     
     ## Autostart Konfig
     while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
         read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
     done
+
 
     if [ "$inputAutostart" = "y" ];then
  	    spcli system config set name "autorules_$dtnow" 
