@@ -129,6 +129,8 @@ fi
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_quarantined" value "1"
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
             echo "# Name:"$'\t' $vpn_client_name $'\t'"Passwort:"$'\t' $vpn_client_pw >> $vpn_log
+            ## Sleep script seems to skip sometimes user
+            sleep 0.5
         done
         echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
