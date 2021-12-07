@@ -160,7 +160,7 @@ if [ "$input" = "y" ];then
     #done
 
 
-    echo "Konfiguration wird beim Neustart"
+    echo "Konfiguration wird beim Neustart geladen"
  	spcli system config set name "autorules_$dtnow" 
 
 
