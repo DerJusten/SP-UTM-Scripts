@@ -179,7 +179,7 @@ if [ "$input" = "y" ];then
     spcli appmgmt restart application "ntpd"
     echo "####################################" >> $vpn_log
     echo "########### Zugänge ################"
-    echo $vpn_log
+    cat $vpn_log
 else
     echo "Vorgang abgebrochen"
 fi
