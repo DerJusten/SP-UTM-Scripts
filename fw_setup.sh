@@ -1,7 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
-vpn_log="/tmp/access.txt"
+vpn_log="/tmp/vpn-access.txt"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
