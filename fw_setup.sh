@@ -16,8 +16,7 @@ echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
 
-if test -f "$cfg"; then
-    
+if test -f "$cfg"; then    
     source $dir/conf.cfg
     location=$cfgLoc
     organization=$cfgOrg
