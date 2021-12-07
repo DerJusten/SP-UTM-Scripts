@@ -1,6 +1,6 @@
 #!/bin/sh
 ####### Nicht anpassen #########
-vpn_log="/media/access.txt"
+vpn_log="/home/root/access.txt"
 createConfigBackup=$1
 ## VPN Einstellungen
 VPN_Name="RW-VPN-U1194"
