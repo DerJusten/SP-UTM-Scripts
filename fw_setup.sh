@@ -164,6 +164,12 @@ if [ "$input" = "y" ];then
     if [ "$inputAutostart" = "y" ];then
  	    spcli system config set name "autorules_$dtnow" 
     fi
+
+    testGroup=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $3}' | grep "Test")
+    if [ ! -z $testGroup ];then
+        ruleID=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2}' | sort -nrk1,1 |head -n 1)
+        spcli rule group move name "Test" pos "$ruleID"
+    fi 
     echo "Starte Dienste neu"
     spcli system config save name "autorules_$dtnow" 
     spcli appmgmt restart application "named"
