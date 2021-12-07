@@ -105,7 +105,8 @@ fi
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0"
         echo "######### VPN Zugänge ##########" >> $vpn_log
-        ##echo "# Name:"$'\t' $VPN_SupportUser$'\t'"Passwort:"$'\t' $vpn_support_pw >> $vpn_log
+        echo "# Name:"$'\t' $VPN_SupportUser$'\t'"Passwort:"$'\t' $vpn_support_pw >> $vpn_log
+        
         ## Create 5x Clients
         for i in 1 2 3 4 5
         do

@@ -109,7 +109,7 @@ if [ "$input" = "y" ];then
     ##################################################################################
     ## Config Cloud Backup
     echo "Erstelle Config Cloud Backup"
-    CloudPw=$(openssl rand -base64 24)
+    CloudPw=$(openssl rand -base64 12)
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
     echo "# Konfig Cloud Backup PW:"$'\t' $CloudPw$ >> $vpn_log
