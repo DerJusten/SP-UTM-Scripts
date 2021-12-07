@@ -1,7 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
-vpn_log="/tmp/access.txt"
+vpn_log="/media/access.txt"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -112,7 +112,7 @@ if [ "$input" = "y" ];then
     CloudPw=$(openssl rand -base64 12)
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
-    echo "# Konfig Cloud Backup PW:"$'\t' $CloudPw$ >> $vpn_log
+    echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
 
     if [ -z $ServerAdminURL ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
@@ -155,14 +155,14 @@ if [ "$input" = "y" ];then
    
 
     ## Autostart Konfig
-    while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
-        read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
-    done
+    #while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
+    #    read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
+    #done
 
 
-    if [ "$inputAutostart" = "y" ];then
- 	    spcli system config set name "autorules_$dtnow" 
-    fi
+    echo "Konfiguration wird beim Neustart"
+ 	spcli system config set name "autorules_$dtnow" 
+
 
     testGroup=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $3}' | grep "Test")
     if [ ! -z $testGroup ];then
@@ -179,6 +179,13 @@ if [ "$input" = "y" ];then
     echo "####################################" >> $vpn_log
     echo "########### Zugänge ################"
     cat $vpn_log
+
+    while [ "$inputReboot" != "n" ] && [ "$inputReboot" != "y" ];do
+        read -s -n 1 -p "Die Firewall muss neugestartet werden. Soll dies nun durchgeführt werden?(y/n)"$'\n' inputReboot
+    done
+    if [ "$inputReboot" = "y" ];then
+        reboot
+    fi
 else
     echo "Vorgang abgebrochen"
 fi
