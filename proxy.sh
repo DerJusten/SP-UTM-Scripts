@@ -1,6 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
+isLicensed="0"
 createConfigBackup=$1
 ####### Anpassen, wenn notwendig #########
 ####### Zertifikatseinstellungen für VPN #########
@@ -22,6 +23,12 @@ if case $version in "11"*) true;; *) false;; esac; then
 else
     isVersion12="1"
 fi
+
+checkLicense=$(spcli system info |grep devicetype | awk 'BEGIN {FS = "|" }; {print $2}')
+case $checkLicense in 
+    *VPN*) echo "Keine Lizenz für Proxy gefunden. Proxy-Einrichtung wird übersprungen."
+    exit 1;;
+esac
 
 
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
