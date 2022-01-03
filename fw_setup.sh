@@ -11,7 +11,7 @@ internetInterface="internet"
 dnsServer1="9.9.9.9"
 dnsServer2="149.112.112.112"
 ################################################################
-echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.11 by DerJusten"
+echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.12 by DerJusten [03.01.2022]"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
