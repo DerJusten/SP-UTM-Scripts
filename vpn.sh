@@ -39,6 +39,17 @@ if test -f "$cfg"; then
 else
     echo $cfg " wurde nicht gefunden"
 fi
+version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
+if case $version in "11"*) true;; *) false;; esac; then
+    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
+else
+    interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $6 "\t" $2}' |grep $intZone |cut -f3 -d$'\t')
+    isVersion12="1"
+fi
+
+info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
+interfaceID=$(echo $info | cut -f1 -d$' ')
+interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
