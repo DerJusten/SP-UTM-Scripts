@@ -14,6 +14,7 @@ VPN_UserGrp="grpUserVPN"
 #### Interface #########
 intInterface="internal-interface"
 intNetwork="internal-network"
+intZone="internal"
 ####### Zertifikatseinstellungen für VPN #########
 bits="2048"
 state="Deutschland"
@@ -36,6 +37,7 @@ if test -f "$cfg"; then
     email=$cfgEmail
     intInterface=$cfgIntInterface
     intNetwork=$cfgIntNetwork
+    intZone=$cfgIntZone
 else
     echo $cfg " wurde nicht gefunden"
 fi
