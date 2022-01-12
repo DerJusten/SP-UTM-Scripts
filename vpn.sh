@@ -52,7 +52,7 @@ fi
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
-
+echo "Current Subnet "$interfaceIpAddress
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
         dtnow=$(date +"%m-%d-%Y_%T")
