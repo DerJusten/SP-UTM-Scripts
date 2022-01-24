@@ -173,7 +173,7 @@ fi
     done 
 
     if [ "$input_konnektor" = "y" ];then
-        read -p "IP-Adresse:" konnektorIpAddress
+        read -p "Konnektor IP-Adresse:" konnektorIpAddress
         ip route get "$konnektorIpAddress" > /dev/null 2>&1
 
         while [ $? != "0" ] || [ -z "$konnektorIpAddress" ];do
@@ -194,7 +194,7 @@ fi
     done 
 
     if [ "$input_TK" = "y" ];then
-        read -p "IP-Adresse:" tkIpAddress
+        read -p "TK-Anlage IP-Adresse:" tkIpAddress
         ip route get "$tkIpAddress" > /dev/null 2>&1
 
         while [ $? != "0" ] || [ -z "$tkIpAddress" ];do
