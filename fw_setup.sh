@@ -32,6 +32,16 @@ else
     echo $cfg " wurde nicht gefunden"
 fi
 
+aio_cfg=$dir"/aio.cfg"
+if test -f "$aio_cfg"; then    
+    source $aio_cfg
+    input=$aio_interface
+    inputRules=$aio_inputRules
+    inputVPN=$aio_inputVPN
+    inputProxy=$aio_inputProxy
+    inputDS=$aio_inputDS
+fi
+
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
@@ -53,12 +63,12 @@ if [ -z $interfaceID ]; then
 fi
 
 
-while [ "$input" != "n" ] && [ "$input" != "y" ];do
+while [ "$inputInterface" != "n" ] && [ "$inputInterface" != "y" ];do
     read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
 done
 
 ##user confirmed
-if [ "$input" = "y" ];then
+if [ "$inputInterface" = "y" ];then
 
     ##Create new config
     dtnow=$(date +"%m-%d-%Y_%T")

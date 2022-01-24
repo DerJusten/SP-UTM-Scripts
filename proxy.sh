@@ -29,7 +29,11 @@ case $checkLicense in
     *VPN*) echo "Keine Lizenz für Proxy gefunden. Proxy-Einrichtung wird übersprungen."
     exit 1;;
 esac
-
+aio_cfg=$dir"/aio.cfg"
+if test -f "$aio_cfg"; then    
+    source $aio_cfg
+    inputProxy=$aio_inputProxy
+fi
 
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
 
@@ -38,11 +42,11 @@ if [ -z $checkIntNetwork ]; then
     exit 1
 fi
 
-while [ "$input" != "n" ] && [ "$input" != "y" ];do
+while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
     read -s -n 1 -p "Quellnetzwerk: $intNetwork Zielnetzwerk: $internetInterface Ist dies korrekt(y/n)?"$'\n' input
 done
 ##user confirmed
-if [ "$input" = "y" ];then
+if [ "$inputProxy" = "y" ];then
 
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then

@@ -31,7 +31,15 @@ if test -f "$cfg"; then
 else
     echo $cfg " wurde nicht gefunden"
 fi
-
+aio_cfg=$dir"/aio.cfg"
+if test -f "$aio_cfg"; then    
+    source $aio_cfg
+    inputDelRules =$aio_inputDelRules 
+    inputTerraCloud=$aio_inputTerraCloud
+    inputWhatsapp=$aio_inputWhatsapp
+    input_konnektor=$aio_input_konnektor
+    input_TK=$aio_input_TK
+fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
