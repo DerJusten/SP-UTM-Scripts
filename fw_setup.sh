@@ -64,7 +64,7 @@ fi
 
 
 while [ "$inputInterface" != "n" ] && [ "$inputInterface" != "y" ];do
-    read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' input
+    read -s -n 1 -p "Ist das Interface $interface ($interfaceIpAddress) das interene Interface(y/n)?"$'\n' $inputInterface
 done
 
 ##user confirmed
