@@ -38,7 +38,9 @@ if test -f "$aio_cfg"; then
     inputTerraCloud=$aio_inputTerraCloud
     inputWhatsapp=$aio_inputWhatsapp
     input_konnektor=$aio_input_konnektor
+    konnektorIpAddress=$aio_konnektorIpAddress
     input_TK=$aio_input_TK
+    tkIpAddress=$aio_tkIpAddress
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
