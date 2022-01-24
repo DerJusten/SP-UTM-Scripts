@@ -173,9 +173,10 @@ fi
     done 
 
     if [ "$input_konnektor" = "y" ];then
-        read -p "Konnektor IP-Adresse:" konnektorIpAddress
-        ip route get "$konnektorIpAddress" > /dev/null 2>&1
-
+        if [ -z "$konnektorIpAddress" ];then
+            read -p "Konnektor IP-Adresse:" konnektorIpAddress
+            ip route get "$konnektorIpAddress" > /dev/null 2>&1
+        fi
         while [ $? != "0" ] || [ -z "$konnektorIpAddress" ];do
             read -p"Konnektor IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' konnektorIpAddress
             ip route get "$konnektorIpAddress" > /dev/null 2>&1
@@ -194,9 +195,10 @@ fi
     done 
 
     if [ "$input_TK" = "y" ];then
-        read -p "TK-Anlage IP-Adresse:" tkIpAddress
-        ip route get "$tkIpAddress" > /dev/null 2>&1
-
+        if [ -z "$tkIpAddress" ];then
+            read -p "TK-Anlage IP-Adresse:" tkIpAddress
+            ip route get "$tkIpAddress" > /dev/null 2>&1
+        fi
         while [ $? != "0" ] || [ -z "$tkIpAddress" ];do
             read -p"TK-Anlagen IP ungueltig, wiederholen Sie ihre Eingabe:"$'\n' tkIpAddress
             ip route get "$tkIpAddress" > /dev/null 2>&1
