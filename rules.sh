@@ -34,7 +34,7 @@ fi
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
-    inputDelRules =$aio_inputDelRules 
+    inputDelRules=$aio_inputDelRules 
     inputTerraCloud=$aio_inputTerraCloud
     inputWhatsapp=$aio_inputWhatsapp
     input_konnektor=$aio_input_konnektor
