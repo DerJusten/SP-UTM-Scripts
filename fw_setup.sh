@@ -41,7 +41,7 @@ if test -f "$aio_cfg"; then
     inputProxy=$aio_inputProxy
     inputDS=$aio_inputDS
 fi
-echo 
+echo $inputInterface
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
