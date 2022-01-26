@@ -35,12 +35,13 @@ fi
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
+    useAio=$aio_UseAio
     inputInterface=$aio_interface
     inputRules=$aio_inputRules
     inputVPN=$aio_inputVPN
     inputProxy=$aio_inputProxy
     inputDS=$aio_inputDS
-    inputReboot=$aio_inputReboot
+    inputReboot=$aio_inputReboot   
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
@@ -189,6 +190,11 @@ if [ "$inputInterface" = "y" ];then
     echo "####################################" >> $vpn_log
     echo "########### Zugänge ################"
     cat $vpn_log
+
+    ## Delete AIO Cfg file
+    if [ "$useAio" = "y" ];then
+        rm $dir"/aio.cfg"
+    fi
 
     while [ "$inputReboot" != "n" ] && [ "$inputReboot" != "y" ];do
         read -s -n 1 -p "Die Firewall muss neugestartet werden. Soll dies nun durchgeführt werden?(y/n)"$'\n' inputReboot
