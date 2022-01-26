@@ -43,7 +43,7 @@ if [ -z $checkIntNetwork ]; then
 fi
 
 while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
-    read -s -n 1 -p "Quellnetzwerk: $intNetwork Zielnetzwerk: $internetInterface Ist dies korrekt(y/n)?"$'\n' input
+    read -s -n 1 -p "Quellnetzwerk: $intNetwork Zielnetzwerk: $internetInterface Ist dies korrekt(y/n)?"$'\n' inputProxy
 done
 ##user confirmed
 if [ "$inputProxy" = "y" ];then
