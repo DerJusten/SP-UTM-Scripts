@@ -89,8 +89,10 @@ echo "Current Subnet "$interfaceIpAddress
         ## Create Rules
         spcli rule group new name "VPN Regeln" > /dev/null
         
+        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "icmp-echo-req" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         spcli rule new group "VPN Regeln" src "$VPN_SupportGrp" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        
         
         ## Create Support User
         echo "Erstelle VPN User " $VPN_SupportUser
@@ -111,7 +113,8 @@ echo "Current Subnet "$interfaceIpAddress
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_download_attachments_quarantine" value "0"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_quarantined" value "1"
         spcli user attribute set name "$VPN_SupportUser" attribute "mailfilter_allow_resend_filtered" value "0"
-        echo "######### VPN Zugänge ##########" >> $vpn_log
+        ## Overwrite file
+        echo "######### VPN Zugänge ##########" > $vpn_log
         echo "# Name:"$'\t' $VPN_SupportUser$'\t'"Passwort:"$'\t' $vpn_support_pw >> $vpn_log
 
         ## Create 5x Clients
