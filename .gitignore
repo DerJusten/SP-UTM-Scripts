@@ -1,6 +1,4 @@
 /Beispiel SecurePoint
-/ID.xlsx
-/mount_usb.ps1
-/shelly.sh
-/Unix Get Firewall Rules.txt
-/vpn_test.txt
+*.ps1
+test*
+interface*
