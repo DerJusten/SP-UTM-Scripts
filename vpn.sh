@@ -3,7 +3,8 @@
 vpn_log="/home/root/access.txt"
 createConfigBackup=$1
 ## VPN Einstellungen
-VPN_Name="RW-VPN-U1194"
+VPN_Port="1194"
+VPN_Name="RW-VPN-U"$VPN_Port
 VPN_network_obj="vpn-c2s-network" 
 CA_VPN="CA_RW_VPN"
 CS_VPN="CS_RW_VPN"
@@ -52,6 +53,19 @@ fi
 info=$(spcli interface address get | awk 'BEGIN {FS = "|" };  {print $1 "\t" $3 "\t" $4}' | grep $interface)
 interfaceID=$(echo $info | cut -f1 -d$' ')
 interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
+
+##Workaround, replace last octect with 0 in /24 
+
+Netmask=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f2)
+if [ "$netmask" = "24" ];then
+
+    LastOctet=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f1)
+    NetID=$(echo $s | sed "s/$LastOctet\//0\//g")
+else
+    NetID=$interfaceIpAddress
+fi
+
+
 echo "Current Subnet "$interfaceIpAddress
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
@@ -73,7 +87,7 @@ echo "Current Subnet "$interfaceIpAddress
 
         ## Add VPN rules
         spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ] > /dev/null
-        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "1194" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
+        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "$VPN_Port" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
         spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0" > /dev/null
         spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name" > /dev/null
 
@@ -88,10 +102,10 @@ echo "Current Subnet "$interfaceIpAddress
 
         ## Create Rules
         spcli rule group new name "VPN Regeln" > /dev/null
-        
+        ##Gruppen temporär entfernt, da nicht funktional
         spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "icmp-echo-req" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
-        spcli rule new group "VPN Regeln" src "$VPN_SupportGrp" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
-        spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         
         
         ## Create Support User
@@ -141,8 +155,8 @@ echo "Current Subnet "$interfaceIpAddress
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_quarantined" value "1"
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
             echo "# Name:"$'\t' $vpn_client_name $'\t'"Passwort:"$'\t' $vpn_client_pw >> $vpn_log
-            ## Sleep script seems to skip sometimes user
-            #sleep 0.5
+            ## Sleep script seems to skip sometimes user            
+            sleep 0.5
         done
         #echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
