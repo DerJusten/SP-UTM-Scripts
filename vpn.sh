@@ -77,7 +77,7 @@ fi
 echo "Current Subnet "$NetID
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
-        dtnow=$(date +"%m-%d-%Y_%T")
+        dtnow=$(date +"%m-%d-%Y_%H-%M-%S")
         echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
         spcli system config save name "vpn_$dtnow"  
     fi 
@@ -113,7 +113,7 @@ echo "Current Subnet "$NetID
         ##Gruppen temporär entfernt, da nicht funktional
         spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "icmp-echo-req" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intInterface" service "administration" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
-        spcli rule new group "VPN Regeln" src "$VPN_network_obj" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
+        spcli rule new group "VPN Regeln" src "$VPN_UserGrp" dst "$intNetwork" service "ms-rdp" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
         
         
         ## Create Support User

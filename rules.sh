@@ -62,7 +62,7 @@ fi
 
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
-        dtnow=$(date +"%m-%d-%Y_%T")
+        dtnow=$(date +"%m-%d-%Y_%H-%M-%S")
         echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
         spcli system config save name "autorules_$dtnow"  
     fi
