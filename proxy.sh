@@ -76,24 +76,60 @@ if [ "$inputProxy" = "y" ];then
         CA_ID=$(spcli cert get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2 "\t" $14}' |grep "CA_Proxy" | cut -f1 -d$'\t')
         
         ## Enable SSL Proxy
+        spcli extc value set application "http_proxy" variable "PROXY_PORT" value [ "8080" ]
+        spcli extc value set application "http_proxy" variable "OUTGOING_ADDR" value [ "" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_DNS_V4FIRST" value "1"
+        spcli extc value set application "http_proxy" variable "ENABLE_LOGGING" value [ "1" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_AUTH_LOCAL" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_AUTH_RADIUS" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_AUTH_NTLM" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_EXCEPTION_URL_LIST" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_FORWARD" value "0"
+        spcli extc value set application "http_proxy" variable "RESTRICT_CLIENT_ACCESS" value [ "1" ]
+        spcli extc value set application "http_proxy" variable "DENY_LOCAL_DESTINATIONS" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN" value "1"
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN_ENGINE" value [ "csamd" ]
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN_MAX_SCANSIZE" value "2000000"
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN_TRICKLE_INTERVAL" value [ "5" ]
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN_SKIP_LIST_ENABLED" value "1"
+        spcli extc value set application "http_proxy" variable "VIRUSSCAN_SKIP_SHOUTCAST" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_LIMIT_GLOBAL_BW" value "0"
+        spcli extc value set application "http_proxy" variable "ENABLE_LIMIT_SINGLE_BW" value "0"
+        spcli extc value set application "http_proxy" variable "GLOBAL_BW" value [ "2000000" ]
+        spcli extc value set application "http_proxy" variable "HOST_BW" value [ "64000" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_BLOCK_TEAMVIEWER" value [ "1" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_BLOCK_NETVIEWER" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_AOL" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_ICQ" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_SKYPE" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_TRILLIAN" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_YAHOO" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_IM_BLOCK_OTHERIM" value [ "0" ]
+        spcli extc value set application "http_proxy" variable "ENABLE_BLOCK_WEBRADIO" value [ "0" ]
         spcli extc value set application "http_proxy" variable "SSLPROXY" value "1"
         spcli extc value set application "http_proxy" variable "SSLPROXY_BUMP_ON_BLOCK_ONLY" value "1"
+        spcli extc value set application "http_proxy" variable "FORWARD_UNSUPPORTED_PROTOCOLS" value "1"
         spcli extc value set application "http_proxy" variable "SSLPROXY_CERT_ID" value [ "$CA_ID" ]
         spcli extc value set application "http_proxy" variable "SSLPROXY_NOVERIFY_LIST_ENABLED" value "0"
         spcli extc value set application "http_proxy" variable "SSLPROXY_EXCEPTION_LIST_ENABLED" value "0"
         spcli extc value set application "http_proxy" variable "SSLPROXY_VERIFY_PEER" value "0"
         spcli extc value set application "http_proxy" variable "ENABLE_TRANSPARENT" value "1"
 
+        echo "Warnung: SNI Validierung ist standardgemäß deaktiviert!"
+        spcli extc value set application "http_proxy" variable "SNI_VALIDATE_SKIP" value [ "1" ]
+
+
         ## Delete existing Rules
         Node_IDs=$(spcli rule transparent get |awk 'BEGIN {FS = "|" }; {print $3 "\t" $2 "\t" $5 "\t" $6}' |grep internal |grep -v pop |cut -f1 -d$'\t')
-        if [ ! -z "$Node_IDs" ];then
-            for i in $Node_IDs
-            do
-                spcli rule transparent delete node_id "$i"
-            done   
-        fi
+        ## Proxy not 100% working if the default nodes get deleted
+       # if [ ! -z "$Node_IDs" ];then
+        #    for i in $Node_IDs
+         #   do
+        #        spcli rule transparent delete node_id "$i"
+          #  done   
+        #fi
 
-        spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
+        #spcli rule transparent add id "2" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
         spcli rule transparent add id "3" type "INCLUDE" src "$intNetwork" dst "$internetInterface"
 
 
