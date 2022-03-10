@@ -30,11 +30,13 @@ case $checkLicense in
     exit 1;;
 esac
 
+dir=$(cd `dirname $0` && pwd)
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
     inputProxy=$aio_inputProxy
 fi
+aio_cfg=$dir"/aio.cfg"
 
 echo $inputProxy
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
