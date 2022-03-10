@@ -42,6 +42,14 @@ if test -f "$cfg"; then
 else
     echo $cfg " wurde nicht gefunden"
 fi
+
+aio_cfg=$dir"/aio.cfg"
+if test -f "$aio_cfg"; then    
+    source $aio_cfg
+    VPN_Port=$aio_VPN_Port
+    VPN_Name="RW-VPN-U"$VPN_Port
+fi
+
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
 if case $version in "11"*) true;; *) false;; esac; then
     interface=$(spcli interface get | awk 'BEGIN {FS = "|" }; {print $1 "\t" $5 "\t" $2}' |grep $intZone |cut -f1 -d$'\t')
@@ -66,7 +74,7 @@ else
 fi
 
 
-echo "Current Subnet "$interfaceIpAddress
+echo "Current Subnet "$NetID
     ##Create new config
     if [ -z $createConfigBackup ] || [ $createConfigBackup == 1 ];then
         dtnow=$(date +"%m-%d-%Y_%T")
@@ -87,7 +95,7 @@ echo "Current Subnet "$interfaceIpAddress
 
         ## Add VPN rules
         spcli interface new name "tun0" type "TUN" flags [ "DYNADDR" ] > /dev/null
-        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "$VPN_Port" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$interfaceIpAddress" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
+        spcli openvpn new name "$VPN_Name" interface "tun0" proto "UDP" local_port "$VPN_Port" auth "LOCAL" cert "$CS_VPN" pool "$VPN_Tun" pool_ipv6 "" mtu "1500" push_subnet [ "$NetID" ] flags [ "MULTIHOME" ] cipher "AES-128-CBC" digest_algorithm "SHA256" > /dev/null
         spcli interface zone new name "vpn-ssl-$VPN_Name" interface "tun0" > /dev/null
         spcli node new name "$VPN_network_obj" address "$VPN_Tun" zone "vpn-ssl-$VPN_Name" > /dev/null
 
