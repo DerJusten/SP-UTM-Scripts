@@ -29,12 +29,14 @@ case $checkLicense in
     *VPN*) echo "Keine Lizenz für Proxy gefunden. Proxy-Einrichtung wird übersprungen."
     exit 1;;
 esac
+
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
     inputProxy=$aio_inputProxy
 fi
 
+echo $inputProxy
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
 
 if [ -z $checkIntNetwork ]; then
