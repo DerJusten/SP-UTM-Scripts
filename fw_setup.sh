@@ -36,7 +36,7 @@ fi
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
-    useAio=$aio_UseAio
+    useAio="y"
     inputInterface=$aio_interface
     inputRules=$aio_inputRules
     inputVPN=$aio_inputVPN
@@ -170,26 +170,27 @@ if [ "$inputInterface" = "y" ];then
     echo "Setze DNS Server"
     spcli extc global set variable "GLOB_NAMESERVER" value [ "$dnsServer1" "$dnsServer2" ]
     
-    if [ "$useAio" = "y" ];then
-        chmod +x /tmp/fw-tool/other.sh
-        sh /tmp/fw-tool/other.sh 0
-    fi
 
     ## Autostart Konfig
     #while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
     #    read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
     #done
 
-
-    echo "Konfiguration wird beim Neustart geladen"
- 	spcli system config set name "autorules_$dtnow" 
-
-
+    ##Move Testgroup to end of Rules
     testGroup=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $3}' | grep "Test")
     if [ ! -z $testGroup ];then
         ruleID=$(spcli rule group get | awk 'BEGIN {FS = "|" }; {print $2}' | sort -nrk1,1 |head -n 1)
         spcli rule group move name "Test" pos "$ruleID"
     fi 
+
+    echo "Konfiguration wird beim Neustart geladen"
+ 	spcli system config set name "autorules_$dtnow" 
+
+    if [ "$useAio" = "y" ];then
+        chmod +x /tmp/fw-tool/other.sh
+        sh /tmp/fw-tool/other.sh 0
+    fi
+
     echo "Starte Dienste neu"
     spcli system config save name "autorules_$dtnow" 
     spcli appmgmt restart application "named"
