@@ -198,13 +198,13 @@ if [ "$inputInterface" = "y" ];then
     spcli appmgmt restart application "http_proxy"
     spcli appmgmt restart application "ntpd"
     echo "####################################" >> $vpn_log
-    echo "########### Zugänge ################"
+    echo "########### Zugaenge ################"
     cat $vpn_log
 
-    ## Delete AIO Cfg file
-    #if [ "$useAio" = "y" ];then
-    #    rm $dir"/aio.cfg"
-    #fi
+    ## Exit scripts when using AIO / reboot wird per Tool ausgeführt
+    if [ "$useAio" = "y" ];then
+        exit
+    fi
 
     while [ "$inputReboot" != "n" ] && [ "$inputReboot" != "y" ];do
         read -s -n 1 -p "Die Firewall muss neugestartet werden. Soll dies nun durchgeführt werden?(y/n)"$'\n' inputReboot
@@ -212,6 +212,7 @@ if [ "$inputInterface" = "y" ];then
     if [ "$inputReboot" = "y" ];then
         reboot
     fi
+
 else
     echo "Vorgang abgebrochen"
 fi
