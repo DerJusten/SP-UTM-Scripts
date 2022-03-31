@@ -7,3 +7,5 @@ rm /tmp/fw-tool/proxy.sh
 rm /tmp/fw-tool/vpn.sh
 rm /tmp/fw-tool/rules.sh
 rm /tmp/fw-tool/cleanup.sh
+rm /tmp/fw-tool/other.sh
+rm /tmp/fw-tool/*.utm
