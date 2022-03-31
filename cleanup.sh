@@ -1,4 +1,5 @@
 #!/bin/sh
+echo "Cleanup scripts"
 
 rm /tmp/fw-tool/aio.cfg
 rm /tmp/fw-tool/conf.cfg
