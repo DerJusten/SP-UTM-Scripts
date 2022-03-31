@@ -2,6 +2,7 @@
 ####### Nicht anpassen #########
 isVersion12="0"
 vpn_log="/tmp/fw-tool/fw-tool/access.txt"
+script_version="1.1 [31.03.2022]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -11,7 +12,7 @@ internetInterface="internet"
 dnsServer1="9.9.9.9"
 dnsServer2="149.112.112.112"
 ################################################################
-echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version 0.12 by DerJusten [12.01.2022]"
+echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version "$script_version" by DerJusten"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
