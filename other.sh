@@ -1,6 +1,11 @@
 #!/bin/sh
+## Set DDNS
 
 
 
+## Set DHCP
+
+
+##Create Backup of current Config
 ConfigName=$(spcli system config get |grep CURRENT |awk 'BEGIN {FS = "|" }; {print $1}' | xargs )
-spcli system config export name "$ConfigName"  > "/tmp/"$ConfigName".utm"
+spcli system config export name "$ConfigName"  > "/tmp/fw-tool/"$ConfigName".utm"

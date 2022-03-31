@@ -1,7 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
-vpn_log="/home/root/access.txt"
+vpn_log="/tmp/fw-tool/fw-tool/access.txt"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -41,7 +41,8 @@ if test -f "$aio_cfg"; then
     inputVPN=$aio_inputVPN
     inputProxy=$aio_inputProxy
     inputDS=$aio_inputDS
-    inputReboot=$aio_inputReboot   
+    inputReboot=$aio_inputReboot 
+    backup_conf=$aio_backup
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
@@ -71,6 +72,10 @@ done
 ##user confirmed
 if [ "$inputInterface" = "y" ];then
 
+    if [ "$backup_conf" = "y" ];then
+        ConfigName=$(spcli system config get |grep CURRENT |awk 'BEGIN {FS = "|" }; {print $1}' | xargs )
+        spcli system config export name "$ConfigName"  > "/tmp/fw-tool/"$ConfigName".utm"
+    fi
     ##Create new config
     dtnow=$(date +"%m-%d-%Y_%H-%M-%S")
     echo "Erstelle neue Konfigurationsdatei autorules_$dtnow"
@@ -82,9 +87,9 @@ if [ "$inputInterface" = "y" ];then
     done
 
     if [ "$inputRules" = "y" ];then
-        if test -f "/tmp/rules.sh"; then
-            chmod +x /tmp/rules.sh
-            sh /tmp/rules.sh 0
+        if test -f "/tmp/fw-tool/rules.sh"; then
+            chmod +x /tmp/fw-tool/rules.sh
+            sh /tmp/fw-tool/rules.sh 0
         else
             echo "Script für die Regeln wurde nicht gefunden"
         fi
@@ -96,9 +101,9 @@ if [ "$inputInterface" = "y" ];then
     done
 
     if [ "$inputVPN" = "y" ];then
-        if test -f "/tmp/vpn.sh"; then
-            chmod +x /tmp/vpn.sh
-            sh /tmp/vpn.sh 0
+        if test -f "/tmp/fw-tool/vpn.sh"; then
+            chmod +x /tmp/fw-tool/vpn.sh
+            sh /tmp/fw-tool/vpn.sh 0
         else
             echo "Script für die Einrichtung von VPN wurde nicht gefunden"
         fi
@@ -110,9 +115,9 @@ if [ "$inputInterface" = "y" ];then
     done
 
     if [ "$inputProxy" = "y" ];then
-        if test -f "/tmp/vpn.sh"; then
-            chmod +x /tmp/proxy.sh
-            sh /tmp/proxy.sh 0
+        if test -f "/tmp/fw-tool/vpn.sh"; then
+            chmod +x /tmp/fw-tool/proxy.sh
+            sh /tmp/fw-tool/proxy.sh 0
         else
             echo "Script für die Einrichtung des transparenten Proxys wurde nicht gefunden"
         fi
@@ -163,7 +168,11 @@ if [ "$inputInterface" = "y" ];then
     ## Add DNS Server
     echo "Setze DNS Server"
     spcli extc global set variable "GLOB_NAMESERVER" value [ "$dnsServer1" "$dnsServer2" ]
-   
+    
+    if [ "$useAio" = "y" ];then
+        chmod +x /tmp/fw-tool/other.sh
+        sh /tmp/fw-tool/other.sh 0
+    fi
 
     ## Autostart Konfig
     #while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
@@ -192,9 +201,9 @@ if [ "$inputInterface" = "y" ];then
     cat $vpn_log
 
     ## Delete AIO Cfg file
-    if [ "$useAio" = "y" ];then
-        rm $dir"/aio.cfg"
-    fi
+    #if [ "$useAio" = "y" ];then
+    #    rm $dir"/aio.cfg"
+    #fi
 
     while [ "$inputReboot" != "n" ] && [ "$inputReboot" != "y" ];do
         read -s -n 1 -p "Die Firewall muss neugestartet werden. Soll dies nun durchgeführt werden?(y/n)"$'\n' inputReboot

@@ -1,6 +1,6 @@
 #!/bin/sh
 ####### Nicht anpassen #########
-vpn_log="/home/root/access.txt"
+vpn_log="/tmp/fw-tool/access.txt"
 createConfigBackup=$1
 ## VPN Einstellungen
 VPN_Port="1194"
