@@ -7,5 +7,6 @@
 
 
 ##Create Backup of current Config
+exho "Erstelle Current Config"
 ConfigName=$(spcli system config get |grep CURRENT |awk 'BEGIN {FS = "|" }; {print $1}' | xargs )
 spcli system config export name "$ConfigName"  > "/tmp/fw-tool/"$ConfigName".utm"
