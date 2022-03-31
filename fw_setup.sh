@@ -188,7 +188,7 @@ if [ "$inputInterface" = "y" ];then
 
     if [ "$useAio" = "y" ];then
         chmod +x /tmp/fw-tool/other.sh
-        sh /tmp/fw-tool/other.sh 0
+        sh /tmp/fw-tool/other.sh
     fi
 
     echo "Starte Dienste neu"
