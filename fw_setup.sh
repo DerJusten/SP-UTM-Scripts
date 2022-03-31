@@ -1,7 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 isVersion12="0"
-vpn_log="/tmp/fw-tool/fw-tool/access.txt"
+vpn_log="/tmp/fw-tool/access.txt"
 script_version="1.1 [31.03.2022]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
