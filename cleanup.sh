@@ -1,5 +1,5 @@
 #!/bin/sh
-echo "Führe CleanUp durch"
+echo "Fuehre CleanUp durch"
 
 rm /tmp/fw-tool/aio.cfg
 rm /tmp/fw-tool/conf.cfg
@@ -11,3 +11,4 @@ rm /tmp/fw-tool/cleanup.sh
 rm /tmp/fw-tool/other.sh
 rm /tmp/fw-tool/access.txt
 rm /tmp/fw-tool/*.utm
+exit
