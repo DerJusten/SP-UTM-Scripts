@@ -117,7 +117,7 @@ if [ "$inputProxy" = "y" ];then
         spcli extc value set application "http_proxy" variable "SSLPROXY_VERIFY_PEER" value "0"
         spcli extc value set application "http_proxy" variable "ENABLE_TRANSPARENT" value "1"
 
-        echo "Warnung: SNI Validierung ist standardgemäß deaktiviert!"
+        echo "Warnung: SNI Validierung ist standardgemaeß deaktiviert!"
         spcli extc value set application "http_proxy" variable "SNI_VALIDATE_SKIP" value [ "1" ]
 
 
