@@ -1,4 +1,8 @@
 #!/bin/sh
+aio_cfg=$dir"/aio.cfg"
+if test -f "$aio_cfg"; then    
+    source $aio_cfg
+fi
 ## Set DDNS
 
 

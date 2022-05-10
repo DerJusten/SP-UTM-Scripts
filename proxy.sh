@@ -38,7 +38,6 @@ if test -f "$aio_cfg"; then
 fi
 aio_cfg=$dir"/aio.cfg"
 
-echo $inputProxy
 checkIntNetwork=$(spcli node get |grep $intNetwork | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | cut -f2 -d$'\t')
 
 if [ -z $checkIntNetwork ]; then
@@ -63,7 +62,6 @@ if [ "$inputProxy" = "y" ];then
     cfg=$dir"/conf.cfg"
 
     if test -f "$cfg"; then
-        echo "Lade Variablen von conf.cfg"
         source $dir/conf.cfg
         location=$cfgLoc
         organization=$cfgOrg
