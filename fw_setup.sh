@@ -133,11 +133,13 @@ if [ "$inputInterface" = "y" ];then
     echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
 
     if [ -z $ServerAdminURL01 ];then
-        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01 ServerAdminURL02
+        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
     fi
 
-    if [ ! -z $ServerAdminURL ];then
+    if [ ! -z $ServerAdminURL02 ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" ]
+    elif [ ! -z $ServerAdminURL01 ];then
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" ]
     fi
 
 
