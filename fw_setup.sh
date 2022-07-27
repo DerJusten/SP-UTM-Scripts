@@ -23,7 +23,8 @@ if test -f "$cfg"; then
     organization=$cfgOrg
     organization_unit=$cfgOrgUnit
     email=$cfgEmail
-    ServerAdminURL=$cfgServerUrl
+    ServerAdminURL01=$cfgServerUrl01
+    ServerAdminURL02=$cfgServerUrl02
     intZone=$cfgIntZone
     intNetwork=$cfgIntNetwork
     intInterface=$cfgIntInterface
@@ -131,12 +132,12 @@ if [ "$inputInterface" = "y" ];then
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
     echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
 
-    if [ -z $ServerAdminURL ];then
-        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL
+    if [ -z $ServerAdminURL01 ];then
+        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01 ServerAdminURL02
     fi
 
     if [ ! -z $ServerAdminURL ];then
-        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL" ]
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" ]
     fi
 
 
