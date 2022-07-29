@@ -25,6 +25,7 @@ if test -f "$cfg"; then
     email=$cfgEmail
     ServerAdminURL01=$cfgServerUrl01
     ServerAdminURL02=$cfgServerUrl02
+    ServerAdminURL03=$cfgServerUrl03
     intZone=$cfgIntZone
     intNetwork=$cfgIntNetwork
     intInterface=$cfgIntInterface
@@ -136,8 +137,8 @@ if [ "$inputInterface" = "y" ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
     fi
 
-    if [ ! -z $ServerAdminURL02 ];then
-        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" ]
+    if [ ! -z $ServerAdminURL03 ];then
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" "$ServerAdminURL03" ]
     elif [ ! -z $ServerAdminURL01 ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" ]
     fi
