@@ -138,9 +138,9 @@ if [ "$inputInterface" = "y" ];then
     fi
 
     if [ ! -z $ServerAdminURL03 ];then
-        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" "$ServerAdminURL03" ]
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" "$ServerAdminURL03" "support.de.securepoint.de" ]
     elif [ ! -z $ServerAdminURL01 ];then
-        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" ]
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "support.de.securepoint.de" ]
     fi
 
 
