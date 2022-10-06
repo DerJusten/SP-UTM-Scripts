@@ -104,6 +104,8 @@ fi
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     ##NTP
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "network-time" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+    ## UDP 1194
+    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "openvpn-udp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     ##Create Group Mails
     spcli service group new name "dgrp_mails"
     ## 993
