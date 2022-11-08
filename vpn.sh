@@ -119,7 +119,7 @@ echo "Current Subnet "$NetID
         ## Create Support User
         echo "Erstelle VPN User " $VPN_SupportUser
         vpn_support_pw=$(openssl rand -base64 24)
-        vpn_support_pw="#Mb"$vpn_support_pw       
+        vpn_support_pw=$vpn_support_pw"$"       
         spcli user new name "$VPN_SupportUser" password "$vpn_support_pw" groups [ "$VPN_SupportGrp" ] > /dev/null
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_l2tp_ip" value ""
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ip" value ""
@@ -144,7 +144,7 @@ echo "Current Subnet "$NetID
         for i in 1 2 3 4 5
         do
             vpn_client_pw=$(openssl rand -base64 12)
-            vpn_client_pw="#Mb"$vpn_client_pw
+            vpn_client_pw=$vpn_client_pw"#"
             vpn_client_name="Client0"$i
             echo "Erstelle VPN User " $vpn_client_name
             spcli user new name "$vpn_client_name" password "$vpn_client_pw" groups [ "$VPN_UserGrp" ] > /dev/null
