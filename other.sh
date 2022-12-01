@@ -16,8 +16,6 @@ if [ "$ddns" = "y" ];then
         fi
     done
     ## Flags buggy :C
-    spcli interface set name "$externalInterface" flags [ "$externalFlags"] options [ "dyndns_hostname=maxbenedikt-test.spdns.de" "dyndns_user=maxbenedikt-test.spdns.de" "dyndns_password=jafg-lumb-wyqv" "dyndns_server=update.spdyn.de" "dyndns_mx=" "dyndns_ipv4=1" "dyndns_ipv6=0" "dyndns_webresolver=http://checkip4.spdyn.de/" ]
-
 fi
 
 
