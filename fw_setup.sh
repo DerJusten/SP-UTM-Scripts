@@ -174,7 +174,10 @@ if [ "$inputInterface" = "y" ];then
     echo "Setze DNS Server"
     spcli extc global set variable "GLOB_NAMESERVER" value [ "$dnsServer1" "$dnsServer2" ]
     
-
+    echo "Erstelle root User"
+    root_pw=$(openssl rand -base64 24)
+    root_pw=$root_pw"$"       
+    spcli user new name "root" password "$root_pw" groups [ "administrator" ] > /dev/null
     ## Autostart Konfig
     #while [ "$inputAutostart" != "n" ] && [ "$inputAutostart" != "y" ];do
     #    read -s -n 1 -p "Soll die Konfiguration beim Neustart geladen werden? (y/n)"$'\n' inputAutostart
@@ -204,6 +207,7 @@ if [ "$inputInterface" = "y" ];then
     spcli appmgmt restart application "ntpd"
     echo "####################################" >> $vpn_log
     echo "########### Zugaenge ################"
+    echo "root:" $root_pw
     cat $vpn_log
 
     ## Exit scripts when using AIO / reboot wird per Tool ausgeführt
