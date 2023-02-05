@@ -2,7 +2,7 @@
 ####### Nicht anpassen #########
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
-script_version="1.1 [31.03.2022]"
+script_version="1.2 [05.02.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -12,7 +12,7 @@ internetInterface="internet"
 dnsServer1="9.9.9.9"
 dnsServer2="149.112.112.112"
 ################################################################
-echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 11 & 12 | Version "$script_version" by DerJusten"
+echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 12 | Version "$script_version" by DerJusten"
 # Get current directory and read conf.cfg
 dir=$(cd `dirname $0` && pwd)
 cfg=$dir"/conf.cfg"
@@ -46,6 +46,8 @@ if test -f "$aio_cfg"; then
     inputDS=$aio_inputDS
     inputReboot=$aio_inputReboot 
     backup_conf=$aio_backup
+    dnsServer1=$aio_dnsServer1
+    dnsServer2=$aio_dnsServer2
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
