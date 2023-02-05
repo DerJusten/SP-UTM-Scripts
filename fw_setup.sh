@@ -192,6 +192,7 @@ if [ "$inputInterface" = "y" ];then
  	spcli system config set name "autorules_$dtnow" 
 
     if [ "$useAio" = "y" ];then
+        echo "Start other.sh"
         chmod +x /tmp/fw-tool/other.sh
         sh /tmp/fw-tool/other.sh
     fi
