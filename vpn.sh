@@ -12,6 +12,7 @@ VPN_Tun="10.8.0.0/24"
 VPN_SupportUser="support"
 VPN_SupportGrp="grpSupportVPN"
 VPN_UserGrp="grpUserVPN"
+VPN_RemoteHost=""
 #### Interface #########
 intInterface="internal-interface"
 intNetwork="internal-network"
@@ -48,6 +49,7 @@ if test -f "$aio_cfg"; then
     source $aio_cfg
     VPN_Port=$aio_VPN_Port
     VPN_Name="RW-VPN-U"$VPN_Port
+    VPN_RemoteHost=$aio_ddnsHost
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
@@ -126,8 +128,8 @@ echo "Current Subnet "$NetID
         spcli user attribute set name "$VPN_SupportUser" attribute "vpn_openvpn_ipv6" value ""
         spcli user attribute set name "$VPN_SupportUser" attribute "password_length" value "8"
         spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_name" value "$VPN_Name"
-        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_certificate" value ""
-        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_gateway" value ""
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_certificate" value "VPN_Support"
+        spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_gateway" value "$VPN_RemoteHost"
         spcli user attribute set name "$VPN_SupportUser" attribute "language" value "DEFAULT"
         spcli user attribute set name "$VPN_SupportUser" attribute "password_change" value "0"
         spcli user attribute set name "$VPN_SupportUser" attribute "openvpn_client_download" value "0"
@@ -154,8 +156,8 @@ echo "Current Subnet "$NetID
             spcli user attribute set name "$vpn_client_name" attribute "vpn_openvpn_ipv6" value ""
             spcli user attribute set name "$vpn_client_name" attribute "password_length" value "8"
             spcli user attribute set name "$vpn_client_name" attribute "openvpn_name" value "$VPN_Name"
-            spcli user attribute set name "$vpn_client_name" attribute "openvpn_certificate" value ""
-            spcli user attribute set name "$vpn_client_name" attribute "openvpn_gateway" value ""
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_certificate" value "CC_$vpn_client_name"
+            spcli user attribute set name "$vpn_client_name" attribute "openvpn_gateway" value "$VPN_RemoteHost"
             spcli user attribute set name "$vpn_client_name" attribute "language" value "DEFAULT"
             spcli user attribute set name "$vpn_client_name" attribute "password_change" value "0"
             spcli user attribute set name "$vpn_client_name" attribute "openvpn_client_download" value "0"
