@@ -1,4 +1,5 @@
 #!/bin/sh
+
 dir=$(cd `dirname $0` && pwd)
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
