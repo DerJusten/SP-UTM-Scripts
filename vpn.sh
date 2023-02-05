@@ -66,7 +66,7 @@ interfaceIpAddress=$(echo $info | cut -f3 -d$' ')
 
 ##Workaround, replace last octect with 0 in /24 
 
-Netmask=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f2)
+netmask=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f2)
 if [ "$netmask" = "24" ];then
 
     LastOctet=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f1)
