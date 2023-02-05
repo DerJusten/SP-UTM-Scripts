@@ -9,6 +9,7 @@ fi
 
 ## Set DDNS
 if [ "$ddns" = "y" ];then
+    echo "Set DynDNS"
     externalInterface="$(spcli interface get |grep external |awk 'BEGIN {FS = "|" }; {print $2}' | xargs)"
     externalFlagsArr="$(spcli interface get |grep external |awk 'BEGIN {FS = "|" }; {print $4}' | xargs)"
     externalFlags=""
