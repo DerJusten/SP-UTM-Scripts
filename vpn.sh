@@ -49,7 +49,7 @@ if test -f "$aio_cfg"; then
     source $aio_cfg
     VPN_Port=$aio_VPN_Port
     VPN_Name="RW-VPN-U"$VPN_Port
-    VPN_RemoteHost=$aio_ddnsHost
+    VPN_RemoteHost=$aio_VPN_Host
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
