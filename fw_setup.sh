@@ -2,7 +2,7 @@
 ####### Nicht anpassen #########
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
-script_version="1.2 [05.02.2023]"
+script_version="1.2a [13.02.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
