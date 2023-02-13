@@ -1,6 +1,6 @@
 #!/bin/sh
 
-dir=$(cd `dirname $0` && pwd)
+dir="/tmp/fw-tool"
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg

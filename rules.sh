@@ -12,7 +12,7 @@ internetInterface="internet"
 ####################################################
 
 # Get current directory and read conf.cfg
-dir=$(cd `dirname $0` && pwd)
+dir="/tmp/fw-tool"
 cfg=$dir"/conf.cfg"
 
 if test -f "$cfg"; then

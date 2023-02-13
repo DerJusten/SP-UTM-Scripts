@@ -14,7 +14,7 @@ dnsServer2="149.112.112.112"
 ################################################################
 echo "Skript zur Ersteinrichtung fuer SecurePoint UTM Version 12 | Version "$script_version" by DerJusten"
 # Get current directory and read conf.cfg
-dir=$(cd `dirname $0` && pwd)
+dir="/tmp/fw-tool"
 cfg=$dir"/conf.cfg"
 
 if test -f "$cfg"; then    

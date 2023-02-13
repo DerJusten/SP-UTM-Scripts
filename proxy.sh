@@ -30,7 +30,7 @@ case $checkLicense in
     exit 1;;
 esac
 
-dir=$(cd `dirname $0` && pwd)
+dir="/tmp/fw-tool"
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
@@ -48,6 +48,7 @@ fi
 while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
     read -s -n 1 -p "Quellnetzwerk: $intNetwork Zielnetzwerk: $internetInterface Ist dies korrekt(y/n)?"$'\n' inputProxy
 done
+
 ##user confirmed
 if [ "$inputProxy" = "y" ];then
 
@@ -58,7 +59,6 @@ if [ "$inputProxy" = "y" ];then
         spcli system config save name "proxy_$dtnow" 
     fi
     # Get current directory and read conf.cfg
-    dir=$(cd `dirname $0` && pwd)
     cfg=$dir"/conf.cfg"
 
     if test -f "$cfg"; then
