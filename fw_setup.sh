@@ -48,6 +48,8 @@ if test -f "$aio_cfg"; then
     backup_conf=$aio_backup
     dnsServer1=$aio_dnsServer1
     dnsServer2=$aio_dnsServer2
+else
+    echo $aio_cfg " wurde nicht gefunden"
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
