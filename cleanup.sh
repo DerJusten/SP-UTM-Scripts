@@ -11,4 +11,5 @@ rm /tmp/fw-tool/cleanup.sh
 rm /tmp/fw-tool/other.sh
 rm /tmp/fw-tool/access.txt
 rm /tmp/fw-tool/*.utm
+rm /tmp/fw-tool/access.csv
 exit

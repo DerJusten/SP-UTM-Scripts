@@ -2,6 +2,7 @@
 ####### Nicht anpassen #########
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
+credCsv="/tmp/fw-tool/access.csv"
 script_version="1.2a [13.02.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
@@ -101,6 +102,9 @@ if [ "$inputInterface" = "y" ];then
             echo "Script für die Regeln wurde nicht gefunden"
         fi
     fi
+    ## Prepare CSV
+    echo "Benutzername;Passwort;" > $credCsv
+
     ##################################################################################
     #### Abfrage VPN Script ####
     while [ "$inputVPN" != "n" ] && [ "$inputVPN" != "y" ];do
@@ -116,7 +120,7 @@ if [ "$inputInterface" = "y" ];then
         fi
     fi
     ##################################################################################
-    #### Abfrage VPN Script ####
+    #### Abfrage Proxy Script ####
     while [ "$inputProxy" != "n" ] && [ "$inputProxy" != "y" ];do
         read -s -n 1 -p "Soll der transparente Proxy eingerichtet werden? (y/n)"$'\n' inputProxy
     done
@@ -136,6 +140,7 @@ if [ "$inputInterface" = "y" ];then
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
     echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
+    echo "Konfig Cloud Backup PW;"$CloudPw$; >> $credCsv
 
     if [ -z $ServerAdminURL01 ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01

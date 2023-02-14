@@ -1,6 +1,7 @@
 #!/bin/sh
 ####### Nicht anpassen #########
 vpn_log="/tmp/fw-tool/access.txt"
+credCsv="/tmp/fw-tool/access.csv"
 createConfigBackup=$1
 ## VPN Einstellungen
 VPN_Port="1194"
@@ -141,7 +142,7 @@ echo "Current Subnet "$NetID
         ## Overwrite file
         echo "######### VPN Zugaenge ##########" > $vpn_log
         echo "# Name:"$'\t' $VPN_SupportUser$'\t'"Passwort:"$'\t' $vpn_support_pw >> $vpn_log
-
+        echo $VPN_SupportUser";"$vpn_support_pw";" >> $credCsv
         ## Create 5x Clients
         for i in 1 2 3 4 5
         do
@@ -167,8 +168,9 @@ echo "Current Subnet "$NetID
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_quarantined" value "1"
             spcli user attribute set name "$vpn_client_name" attribute "mailfilter_allow_resend_filtered" value "0" 
             echo "# Name:"$'\t' $vpn_client_name $'\t'"Passwort:"$'\t' $vpn_client_pw >> $vpn_log
+            echo $vpn_client_name";"$vpn_client_pw";" >> $credCsv
             ## Sleep script seems to skip sometimes user            
-            sleep 0.5
+            #sleep 0.5
         done
         #echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
