@@ -140,7 +140,7 @@ if [ "$inputInterface" = "y" ];then
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
     echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
-    echo "Konfig Cloud Backup PW;"$CloudPw$; >> $credCsv
+    echo "Konfig Cloud Backup PW;"$CloudPw"$;" >> $credCsv
 
     if [ -z $ServerAdminURL01 ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
