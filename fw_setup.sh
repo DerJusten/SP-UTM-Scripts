@@ -3,7 +3,7 @@
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
 credCsv="/tmp/fw-tool/access.csv"
-script_version="1.2a [13.02.2023]"
+script_version="1.2b [14.02.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -137,10 +137,11 @@ if [ "$inputInterface" = "y" ];then
     ## Config Cloud Backup
     echo "Erstelle Config Cloud Backup"
     CloudPw=$(openssl rand -base64 12)
+    CloudPw=$CloudPw"$"
     spcli system cloudbackup set password "$CloudPw"
     spcli extc global set variable "GLOB_CLOUDBACKUP_TIME" value [ "00 00 * * *" ]
-    echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw$ >> $vpn_log
-    echo "Konfig Cloud Backup PW;"$CloudPw"$;" >> $credCsv
+    echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw >> $vpn_log
+    echo "Konfig Cloud Backup PW;"$CloudPw";" >> $credCsv
 
     if [ -z $ServerAdminURL01 ];then
         read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
