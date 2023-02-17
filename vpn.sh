@@ -71,7 +71,7 @@ netmask=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f2)
 if [ "$netmask" = "24" ];then
 
     LastOctet=$(echo $interfaceIpAddress | cut -d "." -f4 | cut -d "/" -f1)
-    NetID=$(echo $s | sed "s/$LastOctet\//0\//g")
+    NetID=$(echo $interfaceIpAddress | sed "s/$LastOctet\//0\//g")
 else
     NetID=$interfaceIpAddress
 fi
