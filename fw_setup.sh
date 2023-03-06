@@ -3,7 +3,7 @@
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
 credCsv="/tmp/fw-tool/access.csv"
-script_version="1.2b [14.02.2023]"
+script_version="1.2c [18.02.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
@@ -143,14 +143,18 @@ if [ "$inputInterface" = "y" ];then
     echo "# Konfig Cloud Backup PW:"$'\t'$'\t' $CloudPw >> $vpn_log
     echo "Konfig Cloud Backup PW;"$CloudPw";" >> $credCsv
 
-    if [ -z $ServerAdminURL01 ];then
-        read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
-    fi
+ #   if [ -z $ServerAdminURL01 ];then
+ #       read -p "Administrativen Zugriff von folgender URL zulassen:"$'\n' ServerAdminURL01
+ #   fi
 
     if [ ! -z $ServerAdminURL03 ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" "$ServerAdminURL03" "support.de.securepoint.de" ]
+    elif [ ! -z $ServerAdminURL02 ];then
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "$ServerAdminURL02" "support.de.securepoint.de" ]
     elif [ ! -z $ServerAdminURL01 ];then
         spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "$ServerAdminURL01" "support.de.securepoint.de" ]
+    else
+        spcli extc value set application "spresolverd" variable [ "MANAGER_HOST_LIST" ] value [ "support.de.securepoint.de" ]
     fi
 
 

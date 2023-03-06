@@ -1,6 +1,9 @@
 #!/bin/sh
-
+vpn_log="/tmp/fw-tool/access.txt"
+credCsv="/tmp/fw-tool/access.csv"
 dir="/tmp/fw-tool"
+###################################################
+
 aio_cfg=$dir"/aio.cfg"
 if test -f "$aio_cfg"; then    
     source $aio_cfg
@@ -76,10 +79,21 @@ if [ "$ddns" = "y" ];then
     spcli appmgmt restart application "named"
 fi
 
-
+##Create rootUser
+rootExists=$(spcli user get name "root" | grep "root")
+if [ -z $rootExists ];then
+    echo "Erstelle root User"
+    root_pw=$(openssl rand -base64 24)
+    root_pw=$root_pw"$"       
+    spcli user new name "root" password "$root_pw" groups [ "administrator" ] > /dev/null
+    echo "# Name:"$'\t'"root"$'\t'"Passwort:"$'\t' $root_pw>> $vpn_log
+    echo "root;"$root_pw";" >> $credCsv
+else
+    echo "Benutzer root existiert bereits"
+fi
 
 ## Set DHCP
-
+## 
 
 ##Create Backup of current Config
 echo "Erstelle Current Config"
