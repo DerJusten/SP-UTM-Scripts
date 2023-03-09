@@ -172,6 +172,9 @@ echo "Current Subnet "$NetID
             ## Sleep script seems to skip sometimes user            
             #sleep 0.5
         done
+        ##Autostart openvpn
+        spcli appmgmt set application openvpn flags [ AUTOSTART ]
+        spcli appmgmt update
         #echo "##############################" >> $vpn_log
         echo "VPN Konfiguration abgeschlossen"
        ## cat $vpn_log
