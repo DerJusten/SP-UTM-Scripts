@@ -2,3 +2,4 @@
 *.ps1
 test*
 interface*
+aio-parameter
