@@ -39,6 +39,7 @@ if test -f "$aio_cfg"; then
     inputWhatsapp=$aio_inputWhatsapp
     input_konnektor=$aio_input_konnektor
     konnektorIpAddress=$aio_konnektorIpAddress
+    tiRouteAdd=$aio_tiRoute
     input_TK=$aio_input_TK
     tkIpAddress=$aio_tkIpAddress
 fi
@@ -190,8 +191,11 @@ fi
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "domain-tcp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
-
-##        spcli route new dst "100.102.0.0/15" router "$konnektorIpAddress" 
+        
+        if [ "$tiRouteAdd" = "y" ];then
+            echo "Add route  100.102.0.0/15 for TI"
+            spcli route new dst "100.102.0.0/15" router "$konnektorIpAddress" 
+        fi
     fi
 
     ## TK Anlage

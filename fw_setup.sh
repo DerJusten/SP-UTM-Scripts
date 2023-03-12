@@ -51,6 +51,7 @@ if test -f "$aio_cfg"; then
     dnsServer2=$aio_dnsServer2
 else
     echo $aio_cfg " wurde nicht gefunden"
+    echo "Die Unterstützung für die interaktive Eingabe wird nur teilweise unterstützt."
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
