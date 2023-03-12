@@ -152,7 +152,8 @@ fi
 
     ## Add DNS Rule
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "dns" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
-
+    ## Allow ICMP echo-req
+    spcli rule new group "Interne Regeln" src "$intNetwork" dst "$intInterface" service "icmp-echo-req" comment "" flags [ "LOG" "ACCEPT" ] > /dev/null
     ## TerraCloud Abfrage
     while [ "$inputTerraCloud" != "n" ] && [ "$inputTerraCloud" != "y" ];do
         read -s -n 1 -p "Wird Terra Cloud Backup verwendet? (y/n)"$'\n' inputTerraCloud
@@ -189,6 +190,8 @@ fi
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "ipsec" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "Konnektor TCP 8443" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
         spcli rule new group "Konnektor" src "TI-Konnektor" dst "$internetInterface" service "domain-tcp" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
+
+##        spcli route new dst "100.102.0.0/15" router "$konnektorIpAddress" 
     fi
 
     ## TK Anlage
