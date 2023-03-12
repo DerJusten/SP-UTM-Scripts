@@ -40,21 +40,26 @@ if [ "$ddns" = "y" ];then
     optPingCheckInt="\"ping_check_interval=\""
     optPingCheckThres="\"ping_check_threshold=\""
     optRouteHint="\"route_hint=\"" 
-    for i in ${externalFlagsArr//,/ }
-    do
-        if [ ! -z $i ];then
-        dyndnsAlreadyEnabled="false"
-            case $i in
-                "DYNDNS"*) dyndnsAlreadyEnabled="true"  ;;
-                *)  externalFlags="$externalFlags\"$i\" " ;;
-            esac
-            externalFlags="$externalFlags\"DYNDNS\" "
-        fi
-        if [ "$dyndnsAlreadyEnabled" = "true" ];then
-            echo  "DynDNS Already exists"
-        #    exit
-        fi
-    done
+
+    if [ -z $externalFlagsArr ];then
+        externalFlags="$externalFlags\"DYNDNS\" "
+    else
+        for i in ${externalFlagsArr//,/ }
+        do
+            if [ ! -z $i ];then
+            dyndnsAlreadyEnabled="false"
+                case $i in
+                    "DYNDNS"*) dyndnsAlreadyEnabled="true"  ;;
+                    *)  externalFlags="$externalFlags\"$i\" " ;;
+                esac
+                externalFlags="$externalFlags\"DYNDNS\" "
+            fi
+            if [ "$dyndnsAlreadyEnabled" = "true" ];then
+                echo  "DynDNS Already exists"
+            #    exit
+            fi
+        done
+    fi
     ##Split options
     for i in ${externalFlagOptionsArr//,/ }
     do

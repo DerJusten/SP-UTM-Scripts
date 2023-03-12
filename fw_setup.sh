@@ -3,7 +3,7 @@
 isVersion12="0"
 vpn_log="/tmp/fw-tool/access.txt"
 credCsv="/tmp/fw-tool/access.csv"
-script_version="1.2c [18.02.2023]"
+script_version="1.2d [12.03.2023]"
 ####### Anpassen, wenn notwendig #########
 intZone="internal"
 intNetwork="internal-network"
