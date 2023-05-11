@@ -103,12 +103,12 @@ fi
     
     spcli rule group new name "Interne Regeln" > /dev/null
     ## Add Quic-Protocol
-    spcli service new name "QUIC-U443" proto "udp" ct_helper "" dst-ports [ "443" ] src-ports [ ]
-    spcli service group add name "default-internet" services "QUIC-U443"
+    spcli service new name "quic-U443" proto "udp" ct_helper "" dst-ports [ "443" ] src-ports [ ]
+    spcli service group add name "default-internet" services "quic-U443"
 
     if [ "$enableDoT" = "y" ];then
-        spcli service new name "DnsOverTLS-T853" proto "tcp" ct_helper "" dst-ports [ "853" ] src-ports [ ]
-        spcli service group add name "default-internet" services "DnsOverTLS-T853"
+        spcli service new name "DoT-T853" proto "tcp" ct_helper "" dst-ports [ "853" ] src-ports [ ]
+        spcli service group add name "default-internet" services "DoT-T853"
     fi
 
     ##Default Internet
