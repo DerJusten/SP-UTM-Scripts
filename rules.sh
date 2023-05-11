@@ -42,6 +42,7 @@ if test -f "$aio_cfg"; then
     tiRouteAdd=$aio_tiRoute
     input_TK=$aio_input_TK
     tkIpAddress=$aio_tkIpAddress
+    enableDoT=$aio_enableDoT
 fi
 
 version=$(spcli system info | awk 'BEGIN {FS = "|" }; {print $1 "\t" $2}' | grep -w version |cut -f2 -d$'\t' | cut -f1 -d ' ')
@@ -101,6 +102,15 @@ fi
     echo "Erstelle interne Regeln (Internet, NTP, E-Mails und TeamViewer)"
     
     spcli rule group new name "Interne Regeln" > /dev/null
+    ## Add Quic-Protocol
+    spcli service new name "QUIC-U443" proto "udp" ct_helper "" dst-ports [ "443" ] src-ports [ ]
+    spcli service group add name "default-internet" services "QUIC-U443"
+
+    if [ "$enableDoT" = "y" ];then
+        spcli service new name "DnsOverTLS-T853" proto "tcp" ct_helper "" dst-ports [ "853" ] src-ports [ ]
+        spcli service group add name "default-internet" services "DnsOverTLS-T853"
+    fi
+
     ##Default Internet
     spcli rule new group "Interne Regeln" src "$intNetwork" dst "$internetInterface" service "default-internet" comment "" flags [ "LOG" "HIDENAT" "ACCEPT" ] nat_node "$extInterface" > /dev/null 2>&1
     ##NTP
